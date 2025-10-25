@@ -1,0 +1,189 @@
+Here is the final, consolidated Product Requirements Document for CodeTandem.
+
+Product Requirements Document (PRD): CodeTandem
+
+    Title: PRD: CodeTandem - Project-Based AI Coding Tutor
+
+    Version: 1.0 (Final)
+
+    Status: Draft
+
+1. Introduction
+
+1.1. Problem
+
+Learning a new programming language or framework (like Python/C++ for FreeCAD) is most effective when applied to a real project. However, novice and intermediate developers quickly get overwhelmed. Existing AI tools (like chatbots) provide good reactive help but lack a proactive, structured learning path. They have no context of the user's overall project goal, their current skill level, or a curriculum. This leads to unfocused learning, frustration, and a disconnect between "learning to code" and "building a project."
+
+1.2. Solution
+
+CodeTandem is a CLI-based AI coding partner that teaches a user to code by co-building their project with them.
+
+It functions as an AI "pair programmer" that takes on the role of a senior developer and mentor. It analyzes the user's project, external API documentation, and a user-provided curriculum. It can optionally integrate with project backlogs from tools like Taskmaster to create a hyper-relevant learning plan.
+
+The AI builds the project's foundation but intelligently assigns specific, well-defined tasks to the user, scaffolding the difficulty based on their real-time performance. This "tandem coding" approach ensures the user is always learning relevant skills in the direct context of their own goals.
+
+1.3. Target Audience
+
+    Primary (The Project Learner): Developers (novice to intermediate) who are learning a new language (Python, C++) by building a specific, complex project (e.g., a FreeCAD addon, a game, a web app). They are motivated but need guidance and structure.
+
+    Secondary (The Upskiller): Experienced developers learning a new framework or API (e.g., a React developer learning the FreeCAD C++ API). They know programming concepts but need context-specific, practical tasks.
+
+2. Core Features
+
+2.1. Feature: Project-Aware Initialization
+
+Description: The user initializes CodeTandem by pointing it at their project directory, a curriculum, and optionally, API documentation and a Taskmaster project. User Story: As a user, I want to run a single command (codetandem init) that tells the AI what my project is, what I want to learn, and what my project goals are, so it can create a personalized, relevant plan.
+
+Requirements:
+
+    CLI Command: codetandem init --project <path> --curriculum <path> [--docs <url_or_path_1>] [--taskmaster <path/to/taskmaster/dir>]
+
+    Project Scanning: The AI must perform a full scan of the --project directory to understand the existing file structure, code, and dependencies.
+
+    Curriculum Parsing: The AI must read the Markdown-based --curriculum file (e.g., "Module 1: C++ Basics", "Module 2: FreeCAD Part Primitives...").
+
+    Documentation Ingestion: The AI must scrape, parse, and embed all content provided via the --docs flags (e.g., API references, tutorials). This external knowledge base will be used for task generation, hinting, and code review.
+
+    Optional Taskmaster Integration:
+
+        If the --taskmaster flag is provided, the AI must parse the project's PRD (e.g., prd.md) and the decomposed task file (e.g., tasks.json).
+
+        This "project backlog" context must be used to create a "Curriculum-Backlog Map", where learning objectives are taught by having the user implement specific tasks from the Taskmaster backlog.
+
+        The generated learning modules should respect the task dependencies from the Taskmaster plan.
+
+    State Generation: The AI will generate and store:
+
+        modules.json: The structured learning plan (and Curriculum-Backlog Map, if applicable).
+
+        codetandem.state.json: A file to track user progress (current module, skill score, completed tasks, skipped tasks).
+
+2.2. Feature: Adaptive Tandem Coding Loop
+
+Description: This is the core interaction. The AI writes code, leaving strategic // TODO tasks for the user. User Story: As a user, I want to type codetandem next and have the AI advance the project and give me a single, clear task that is relevant to my project and my current learning module.
+
+Requirements:
+
+    CLI Command: codetandem next
+
+    AI Action:
+
+        The AI consults modules.json and codetandem.state.json to identify the next logical learning task.
+
+        The AI analyzes the current project state.
+
+        The AI modifies the project files, writing boilerplate, foundational, or advanced code itself.
+
+        The AI inserts an anchored comment (e.g., // TODO: [Module 2.1] ...) at the exact location where the user needs to work.
+
+    Output: The AI informs the user which file and line their task is on.
+
+        (If Taskmaster Integrated): The AI will also state the corresponding Taskmaster ID (e.g., "Your next task is ready in MyTool.cpp. This will help complete Taskmaster objective #007.").
+
+2.3. Feature: Dynamic Scaffolding
+
+Description: The AI adjusts the level of help provided in the // TODO comments based on user performance. User Story: As I get better at a topic, I want the AI to give me less help and more challenging tasks, so I am actively learning, not just following instructions.
+
+Requirements:
+
+    Skill-Based Hinting: The codetandem.state.json file will maintain a "skill score" for each module.
+
+    Low Skill Score (e.g., 0-3): // TODO comments will be highly detailed, providing explicit class/function names to use and even code snippets.
+
+    Medium Skill Score (e.g., 4-7): Comments will describe the goal (e.g., "Add a QtGui.QLabel here") but not the exact syntax.
+
+    High Skill Score (e.g., 8+): Comments will be conceptual (e.g., "Refactor this function to be idempotent").
+
+2.4. Feature: Interactive Code Review & Feedback
+
+Description: When a user finishes a task, they submit it for AI review. The review is constructive and provides actionable feedback. User Story: As a user, when I codetandem submit, I want to know not just if my code works, but if it's good code, and how I can improve it based on my project's standards and APIs.
+
+Requirements:
+
+    CLI Command: codetandem submit
+
+    Review Process:
+
+        Static Analysis: The AI will first run integrated linters (e.g., pylint, clang-tidy) and report on style/syntax issues.
+
+        Functional Review: The AI checks if the user's code logically fulfills the // TODO task requirements.
+
+        API-Aware Feedback: The AI's review must cross-reference the user's code against the provided API documentation (--docs). It will flag the use of deprecated functions, suggest more efficient API calls, and correct API-specific implementation errors.
+
+        Conceptual Feedback: The AI provides a brief, qualitative review (e.g., "Good use of a std::unique_ptr here!").
+
+    On Success: The AI updates codetandem.state.json and congratulates the user.
+
+    On Failure: The AI provides a clear error message and a hint on how to fix it, without automatically solving it.
+
+2.5. Feature: Granular User Control
+
+Description: The user must be able to manage the interaction, ask for help, or override the AI. User Story: As a user, I want to be able to ask for a hint if I'm stuck, or even ask the AI to just do the task for me if I'm frustrated, without losing my place.
+
+Requirements:
+
+    codetandem hint: Provides a context-aware hint. Repeated calls provide progressively more explicit hints. Hints will proactively cite and link to the user-provided documentation (e.g., "See the FreeCAD wiki page on Part::Feature for more info...").
+
+    codetandem solve: The AI completes the current // TODO task for the user, explains its solution, and marks the task as "skipped" in the state file.
+
+    codetandem set_level [easy|medium|hard]: Manually overrides the AI's automatic scaffolding. easy provides maximum hints; hard provides minimal/conceptual tasks.
+
+2.6. Feature: Module Assessment
+
+Description: To complete a module, the user must pass a final assessment. User Story: As a user, before moving to the next topic, I want to prove I've mastered the current one with a comprehensive test.
+
+Requirements:
+
+    CLI Command: codetandem test (triggered automatically at the end of a module).
+
+    Capstone Task: The AI will generate a "capstone" task that requires the user to combine multiple skills from the module (e.g., "Create a new FreeCAD tool from scratch that uses the Part.makeBox and Part.makeCut commands we've learned").
+
+    No Scaffolding: This task will be given with no // TODO comments or hints (unless requested).
+
+    Pass/Fail: On successful submission, the AI marks the module as complete and unlocks the next one.
+
+2.7. Feature: AI Provider & Configuration
+
+Description: The user must be able to configure the tool to use their preferred AI model and API key. User Story: As a user, I want to be able to use my own API key for Claude, Gemini, or OpenAI, so I can choose the model that I find most effective and manage my own costs.
+
+Requirements:
+
+    CLI Commands: The tool must provide commands for managing settings:
+
+        codetandem config set provider <gemini|claude|openai|etc.>
+
+        codetandem config set api_key <USER_API_KEY>
+
+        codetandem config set model <model_name> (e.g., gemini-1.5-pro)
+
+    Secure Storage: API keys must be stored securely (e.g., in the system keychain or a user-level .env file) and never be printed to the console.
+
+    Modular Architecture: The core logic must be abstracted from the AI call layer, allowing new providers to be added easily.
+
+3. Non-Functional Requirements
+
+    Platform: CLI tool, cross-platform (Windows, macOS, Linux).
+
+    Performance: Code analysis and generation should feel near-instantaneous (e.g., < 5 seconds for most interactions).
+
+    Context: Must be able to ingest and maintain context for large codebases (e.g., 100+ files) and large documentation sets.
+
+    AI Model Agnosticism: The system must not be dependent on a single AI provider. It will function as an orchestration layer that constructs prompts and parses responses from user-configured LLM APIs.
+
+    Language Support: v1.0 will focus on Python and C++.
+
+    Editor Agnostic: Must work as a standalone CLI, regardless of the user's IDE (VS Code, Vim, Qt Creator, etc.).
+
+4. Success Metrics
+
+    Activation: % of users who successfully complete codetandem init with a project.
+
+    Engagement: Average number of tasks (codetandem next) completed per user per week.
+
+    Mastery: Module completion rate.
+
+    Relevance: % of init commands that use the optional --taskmaster or --docs flags (tracks uptake of advanced features).
+
+    Stuck Rate: Ratio of codetandem hint / codetandem solve commands to codetandem submit commands. (A good sign is if this ratio decreases over time for a user).
+
+    Retention: % of users who start a second project or curriculum with the tool.

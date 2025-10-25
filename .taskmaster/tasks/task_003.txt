@@ -1,0 +1,37 @@
+# Task ID: 3
+# Title: Build Abstract AI Provider Service Layer
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Create a modular, abstract service layer to handle interactions with different LLM providers (Gemini, Claude, OpenAI), ensuring the core application logic is model-agnostic.
+# Details:
+Define a base class or interface, e.g., `BaseAIProvider`, with methods like `generate_code_suggestion(prompt)` and `review_code(code_snippet)`. Implement concrete classes like `GeminiProvider`, `OpenAIProvider`, etc., that inherit from the base class and handle the specific API calls and response parsing for their respective services. The service should be initialized using the configuration from Task 1.
+
+# Test Strategy:
+Use mocking libraries (like Python's `unittest.mock`) to write unit tests for each provider class. Mock the external API calls to test the prompt construction and response parsing logic without making actual network requests. Create an integration test for one provider (using a test API key) to ensure end-to-end connectivity.
+
+# Subtasks:
+## 1. Design and Define the BaseAIProvider Abstract Interface [pending]
+### Dependencies: None
+### Description: Create the abstract base class or interface (`BaseAIProvider`) that defines the common contract for all AI provider implementations, ensuring a consistent API for the core application.
+### Details:
+Define an abstract class in Python using the `abc` module. It must include abstract methods such as `generate_code_suggestion(prompt: str)` and `review_code(code_snippet: str)` that raise `NotImplementedError`.
+
+## 2. Implement the Concrete OpenAIProvider Class [pending]
+### Dependencies: 3.1
+### Description: Create the `OpenAIProvider` class that inherits from `BaseAIProvider` and implements the specific logic for interacting with the OpenAI API, handling requests and parsing responses.
+### Details:
+Implement the required methods by making API calls to the configured OpenAI model. This includes handling authentication using the API key from the config, formatting the request payload, and parsing the JSON response.
+
+## 3. Implement the Concrete GeminiProvider Class [pending]
+### Dependencies: 3.1
+### Description: Create the `GeminiProvider` class that inherits from `BaseAIProvider` and implements the specific logic for interacting with the Google Gemini API.
+### Details:
+Implement the `generate_code_suggestion` and `review_code` methods using the Google Gemini SDK. This involves handling Gemini-specific request structures, authentication, and response parsing to conform to the `BaseAIProvider` contract.
+
+## 4. Create a Factory Function for AI Provider Instantiation [pending]
+### Dependencies: 3.2, 3.3
+### Description: Develop a factory function that dynamically selects and instantiates the correct AI provider class based on the application's configuration file.
+### Details:
+The function, named `get_ai_provider()`, will read the 'provider' name from the configuration system (established in Task 1). It will use a dictionary or conditional logic to return an initialized instance of the corresponding provider class.
+

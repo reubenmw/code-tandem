@@ -1,0 +1,31 @@
+# Task ID: 7
+# Title: Implement User Control Commands (`hint`, `solve`, `set_level`)
+# Status: pending
+# Dependencies: 4, 6
+# Priority: medium
+# Description: Develop the user-facing commands to manage the learning process: `hint` for getting help, `solve` for AI completion, and `set_level` for manual difficulty override.
+# Details:
+`hint`: Queries the AI with the current task context for a hint. Subsequent calls should generate more explicit hints. `solve`: Instructs the AI to complete the current `// TODO`, writes the solution to the file, and marks the task as 'skipped' in `codetandem.state.json`. `set_level`: Manually sets a flag in the state file that overrides the skill score-based scaffolding, forcing it to 'easy', 'medium', or 'hard'.
+
+# Test Strategy:
+For each command, test its interaction with the state file and the AI service. For `hint`, mock the AI to test that repeated calls result in different prompts. For `solve`, verify the code is written correctly and the state is updated to 'skipped'. For `set_level`, verify the state file is updated and that the next `codetandem next` command respects the override.
+
+# Subtasks:
+## 1. Implement the `hint` command for user assistance [pending]
+### Dependencies: None
+### Description: Develop the `hint` command that allows a user to request help on the current task. The command should query the AI with the task context and provide progressively more explicit hints on subsequent calls.
+### Details:
+Create the CLI entry point for `codetandem hint`. This command will read the current state from `codetandem.state.json` to identify the active task. It will then query the AI service, providing the task context. Logic must be included to track the number of hints requested for the current task and adjust the AI prompt to ask for a more detailed hint each time.
+
+## 2. Implement the `solve` command for AI task completion [pending]
+### Dependencies: None
+### Description: Build the `solve` command which instructs the AI to complete the current `// TODO` block. The command must write the generated solution into the source file and update the task's status to 'skipped' in the state file.
+### Details:
+Implement the `codetandem solve` command handler. This function will fetch the current task details, send a request to the AI to generate the complete code solution, and then parse the response. The extracted code will be used to replace the `// TODO` block in the target file. Finally, the command must update `codetandem.state.json` to mark the task as 'skipped'.
+
+## 3. Implement `set_level` command and integrate with `next` command [pending]
+### Dependencies: None
+### Description: Create the `set_level` command to allow manual override of the difficulty level ('easy', 'medium', 'hard'). The `next` command must be updated to respect this override, bypassing the skill score-based scaffolding.
+### Details:
+Develop the `codetandem set_level <level>` command. It should validate the provided level and update a new `difficulty_override` field in `codetandem.state.json`. Modify the existing `next` command's logic to check for this field. If the override is set, the prompt generation for the AI should use the specified difficulty level instead of relying on the dynamic skill score.
+

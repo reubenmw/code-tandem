@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+codetandem/__init__.py
+codetandem/main.py
+codetandem.egg-info/PKG-INFO
+codetandem.egg-info/SOURCES.txt
+codetandem.egg-info/dependency_links.txt
+codetandem.egg-info/entry_points.txt
+codetandem.egg-info/requires.txt
+codetandem.egg-info/top_level.txt

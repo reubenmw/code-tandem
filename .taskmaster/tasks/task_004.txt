@@ -1,0 +1,43 @@
+# Task ID: 4
+# Title: Implement Core Tandem Coding Loop (`codetandem next`)
+# Status: pending
+# Dependencies: 2, 3
+# Priority: high
+# Description: Develop the `codetandem next` command, which is the core user interaction. The AI analyzes the project and state, writes foundational code, and inserts a specific `// TODO` task for the user.
+# Details:
+This command will: 1. Read `modules.json` and `codetandem.state.json` to determine the current learning objective. 2. Construct a detailed prompt for the AI service (from Task 3) including the current file's content, the learning objective, and the overall project context. 3. The AI will return modified code. 4. The command will parse the AI's response, find the file to modify, and insert the new code along with a formatted `// TODO: [Module X.Y] ...` comment at the correct location. 5. It will output the file and line number to the user.
+
+# Test Strategy:
+Create a controlled test environment with a simple project and state file. Mock the AI service to return predictable code modifications. Run `codetandem next` and assert that the correct file is modified in the expected way. Test edge cases like an empty file or a file that doesn't exist.
+
+# Subtasks:
+## 1. Read and Load Project State for `codetandem next` [pending]
+### Dependencies: None
+### Description: Implement the logic to read and parse `modules.json` and `codetandem.state.json` to determine the current module, task, and learning objective.
+### Details:
+This function will locate the two JSON files in the project root, read their contents, and load them into a structured data object. It must handle potential errors like missing files or invalid JSON.
+
+## 2. Implement Prompt Engineering for AI Code Generation [pending]
+### Dependencies: 4.1
+### Description: Develop the logic to construct a comprehensive prompt for the AI service, incorporating the current file's content, learning objective, and overall project context.
+### Details:
+This module will assemble a detailed prompt string. It needs to include the learning objective from the state, the full content of the target file, and potentially a summary of the project structure to give the AI enough context.
+
+## 3. Integrate AI Service Client for Code Generation [pending]
+### Dependencies: 4.2
+### Description: Implement the function to send the constructed prompt to the AI service and handle the response, including success and error cases.
+### Details:
+This involves making an API call to the AI service endpoint. The implementation must handle network errors, API rate limits, and parse the returned data. It should extract the raw code modification payload from the AI's response.
+
+## 4. Develop Parser for AI-Generated Code Modifications [pending]
+### Dependencies: 4.3
+### Description: Create a robust parser to extract the target file path, the new code block, and the location for insertion from the AI's structured response.
+### Details:
+The AI response is expected in a specific format (e.g., JSON with keys for 'file_path', 'code_block'). This parser will validate the response structure and extract these values, handling cases where the format is incorrect.
+
+## 5. Apply Code Changes and Insert TODO Comment [pending]
+### Dependencies: 4.4
+### Description: Write the logic to safely modify the target file on the user's file system, inserting the AI-generated code and the formatted `// TODO` comment at the correct location.
+### Details:
+This function will take the parsed file path and code. It will read the target file, insert the new code and the `// TODO: [Module X.Y] ...` comment, and write the changes back to disk. It must also output the file and line number to the user's console.
+

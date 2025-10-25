@@ -1,0 +1,31 @@
+# Task ID: 6
+# Title: Implement Dynamic Scaffolding and Skill Scoring
+# Status: pending
+# Dependencies: 4, 5
+# Priority: medium
+# Description: Enhance the `codetandem next` and `submit` commands to support dynamic scaffolding by tracking and using a 'skill score' for each module.
+# Details:
+Modify `codetandem.state.json` to include a `skill_scores` object mapping module IDs to a score (e.g., 0-10). The `submit` command will increment this score on success. The `next` command will read this score before generating a task. The prompt sent to the AI will be adjusted based on the score: low scores request highly detailed `// TODO` comments with snippets, medium scores request goal-oriented comments, and high scores request conceptual tasks.
+
+# Test Strategy:
+Test the `submit` command to ensure it correctly increments the skill score for the current module. Write unit tests for the prompt generation logic in the `next` command, providing different skill scores as input and asserting that the generated prompt includes instructions for the correct level of detail (e.g., 'provide snippets', 'provide conceptual goal').
+
+# Subtasks:
+## 1. Update State Schema and `submit` Command for Skill Scoring [pending]
+### Dependencies: None
+### Description: Modify the `codetandem.state.json` file to include a `skill_scores` object. Update the `submit` command to increment the relevant module's skill score upon successful task completion.
+### Details:
+Define the structure for `skill_scores` in `codetandem.state.json` as a map of module IDs to integer scores. In the `submit` command's success logic, retrieve the current module ID, read the current score, increment it, and write it back to the state file.
+
+## 2. Enhance `next` Command to Read Skill Score [pending]
+### Dependencies: 6.1
+### Description: Modify the `codetandem next` command to read the current module's skill score from the `codetandem.state.json` file before it generates a new task.
+### Details:
+In the `next` command's execution flow, add a step to open and parse `codetandem.state.json`. Extract the skill score for the current active module. If a score doesn't exist for the module, default to a starting value (e.g., 0). Pass this score to the prompt generation logic.
+
+## 3. Implement Conditional Prompt Logic Based on Skill Score [pending]
+### Dependencies: 6.2
+### Description: Implement the logic within the `next` command to dynamically adjust the AI prompt based on the user's skill score for the current module, requesting different levels of scaffolding.
+### Details:
+Create a prompt generation function that accepts the skill score. Use conditional logic to select prompt text. For low scores (0-3), request detailed `// TODO` comments with code snippets. For medium scores (4-7), request goal-oriented comments. For high scores (8-10), request conceptual tasks.
+

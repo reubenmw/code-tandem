@@ -1,0 +1,2 @@
+[console_scripts]
+codetandem = codetandem.main:app

@@ -1,0 +1,667 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Setup CLI Framework and Configuration Management",
+        "description": "Initialize the project structure for a cross-platform CLI tool and implement the `codetandem config` command for managing AI provider settings and API keys securely.",
+        "details": "Use a robust CLI framework like Python's `Typer` or `Click`. Implement `codetandem config set provider <name>`, `... set api_key <key>`, and `... set model <model_name>`. API keys must be stored securely in a user-level `.env` file or system keychain, not in plaintext config files. The configuration module should provide easy access to these settings for other parts of the application. Create a modular structure for adding new AI providers later.",
+        "testStrategy": "Unit tests for the config module: verify that setting and getting provider, API key, and model works correctly. Test secure storage by ensuring the API key is not stored in a world-readable file and is correctly retrieved. Manually run CLI commands to confirm they update the configuration as expected.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Project Structure with Typer CLI Framework",
+            "description": "Set up the basic project directory structure, initialize a Python project, and integrate the Typer library as the core CLI framework. This includes creating the main entry point for the `codetandem` command.",
+            "dependencies": [],
+            "details": "Create a `main.py` with a Typer app instance. Use Poetry or another package manager to add `typer` as a dependency. The initial setup should support a basic command like `codetandem --version`.",
+            "status": "done",
+            "testStrategy": "Run the CLI entry point from the command line and verify that it executes without errors and displays help text or version information as expected.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Design and Implement the Core Configuration Module",
+            "description": "Create a Python module to manage application settings. This module will handle loading, accessing, and saving non-sensitive configuration values like AI provider and model name, abstracting the storage mechanism.",
+            "dependencies": [
+              1
+            ],
+            "details": "The module should expose functions like `get_config_value(key)` and `set_config_value(key, value)`. It will manage a user-level configuration file (e.g., `~/.config/codetandem/config.json`).",
+            "status": "done",
+            "testStrategy": "Unit test the configuration module. Test setting and getting values for 'provider' and 'model'. Test edge cases like creating the config file if it doesn't exist.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement Secure API Key Storage and Retrieval",
+            "description": "Integrate a cross-platform library like `keyring` to securely store and retrieve the AI provider's API key using the system's native keychain or credential store, avoiding plaintext storage.",
+            "dependencies": [
+              2
+            ],
+            "details": "Add the `keyring` library as a dependency. Create wrapper functions `set_api_key(service_name, key)` and `get_api_key(service_name)` that the main configuration module will use specifically for API key management.",
+            "status": "done",
+            "testStrategy": "Write unit tests that mock the `keyring` library to verify that the correct functions are called for setting and getting the API key. Manual testing on different operating systems is also recommended.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement `codetandem config` Command with Subcommands",
+            "description": "Implement the `codetandem config` command group using Typer. This will include subcommands like `set` and `get` to allow users to manage their provider, model, and API key from the command line.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Create a new Typer command group for `config`. Implement `config set provider <name>`, `config set model <model_name>`, and `config set api_key <key>`. The `set api_key` command must use the secure storage module.",
+            "status": "done",
+            "testStrategy": "Use `Typer.testing.CliRunner` for end-to-end tests. Test each subcommand, such as `codetandem config set provider openai`, and verify that the underlying configuration file and system keychain are updated correctly.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 4,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Break down the task of setting up the CLI and configuration management. Create subtasks for: 1. Initializing the project with a chosen CLI framework (e.g., Typer). 2. Designing and implementing the configuration module to handle settings like provider and model. 3. Implementing the secure storage and retrieval of API keys using a cross-platform solution like the system keychain. 4. Adding the `codetandem config` command with its subcommands (`set`, `get`, etc.) to the CLI."
+      },
+      {
+        "id": "2",
+        "title": "Implement Core Project Initialization (`codetandem init`)",
+        "description": "Develop the `codetandem init` command to scan a project directory and curriculum file, and generate the initial state files `modules.json` and `codetandem.state.json`.",
+        "details": "The command will take `--project` and `--curriculum` paths. It needs to recursively walk the project directory to build a file tree representation. It must also parse the provided Markdown curriculum file into a structured format. Based on these inputs, it will generate two JSON files: `modules.json` (the structured learning plan derived from the curriculum) and `codetandem.state.json` (to track progress, initialized to the first module with a default skill score).",
+        "testStrategy": "Create several mock project directories and curriculum files (simple, complex, empty). Write unit tests to verify that the file scanning and Markdown parsing logic works correctly. Run the `init` command against these mock projects and assert that the generated `modules.json` and `codetandem.state.json` files match the expected structure and content.",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Develop Project Directory File Tree Scanner",
+            "description": "Implement a module that recursively scans a specified project directory and builds a structured, in-memory representation of its file and folder hierarchy.",
+            "dependencies": [],
+            "details": "The scanner should ignore common unnecessary files/directories like `.git`, `node_modules`, and `__pycache__`. The output should be a JSON-serializable object representing the tree.",
+            "status": "done",
+            "testStrategy": "Create mock directory structures with varying depths, file types, and ignored directories. Assert that the generated file tree accurately reflects the mock structure.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Create Robust Markdown Curriculum Parser",
+            "description": "Develop a parser to read the Markdown curriculum file and extract a structured list of learning modules, their objectives, and any associated metadata.",
+            "dependencies": [],
+            "details": "Use a suitable Markdown parsing library. The parser must identify specific heading levels (e.g., H1 for module titles, H2 for objectives) and list items for details, converting them into a structured object.",
+            "status": "done",
+            "testStrategy": "Test with various Markdown files: well-formed, malformed, empty, and complex structures. Verify that the parser correctly extracts modules and objectives into a consistent data structure.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement `modules.json` Generation Logic",
+            "description": "Design the JSON schema for `modules.json` and create the logic to transform the parsed curriculum data from the Markdown file into this final, structured format.",
+            "dependencies": [
+              2
+            ],
+            "details": "The schema should define a list of module objects, each with a unique ID, title, and a list of objectives. The generation logic will take the output from the Markdown parser and write the `modules.json` file.",
+            "status": "done",
+            "testStrategy": "Provide mock parsed curriculum data as input. Assert that the generated `modules.json` file conforms to the defined schema and accurately represents the input data.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement Initial `codetandem.state.json` Generation",
+            "description": "Design the JSON schema for the project state file and implement the logic to generate the initial `codetandem.state.json` upon project initialization.",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "The initial state must reference the first module from `modules.json`, set the `current_module_id`, initialize a default `skill_score` for that module, and store the project file tree from the scanner.",
+            "status": "done",
+            "testStrategy": "After generating mock `modules.json` and file tree data, run the state generation logic. Verify that the created `codetandem.state.json` correctly points to the first module ID and contains all required initial state fields.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 5,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Break down the `codetandem init` command implementation. Create subtasks for: 1. Developing a module to recursively scan a project directory and represent it as a file tree. 2. Creating a robust parser for the Markdown curriculum file to extract modules and objectives. 3. Designing the schema and implementing the generation logic for `modules.json`. 4. Designing the schema and implementing the generation logic for the initial `codetandem.state.json`."
+      },
+      {
+        "id": "3",
+        "title": "Build Abstract AI Provider Service Layer",
+        "description": "Create a modular, abstract service layer to handle interactions with different LLM providers (Gemini, Claude, OpenAI), ensuring the core application logic is model-agnostic.",
+        "details": "Define a base class or interface, e.g., `BaseAIProvider`, with methods like `generate_code_suggestion(prompt)` and `review_code(code_snippet)`. Implement concrete classes like `GeminiProvider`, `OpenAIProvider`, etc., that inherit from the base class and handle the specific API calls and response parsing for their respective services. The service should be initialized using the configuration from Task 1.",
+        "testStrategy": "Use mocking libraries (like Python's `unittest.mock`) to write unit tests for each provider class. Mock the external API calls to test the prompt construction and response parsing logic without making actual network requests. Create an integration test for one provider (using a test API key) to ensure end-to-end connectivity.",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design and Define the BaseAIProvider Abstract Interface",
+            "description": "Create the abstract base class or interface (`BaseAIProvider`) that defines the common contract for all AI provider implementations, ensuring a consistent API for the core application.",
+            "dependencies": [],
+            "details": "Define an abstract class in Python using the `abc` module. It must include abstract methods such as `generate_code_suggestion(prompt: str)` and `review_code(code_snippet: str)` that raise `NotImplementedError`.",
+            "status": "done",
+            "testStrategy": "Unit tests will verify that the `BaseAIProvider` class cannot be instantiated directly. Further tests will ensure that any subclass that fails to implement all abstract methods also raises a `TypeError` upon instantiation.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement the Concrete OpenAIProvider Class",
+            "description": "Create the `OpenAIProvider` class that inherits from `BaseAIProvider` and implements the specific logic for interacting with the OpenAI API, handling requests and parsing responses.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement the required methods by making API calls to the configured OpenAI model. This includes handling authentication using the API key from the config, formatting the request payload, and parsing the JSON response.",
+            "status": "done",
+            "testStrategy": "Use `unittest.mock` to patch the external API client (e.g., `openai.ChatCompletion.create`). Write unit tests to verify that the correct API endpoint is called with the expected payload and that the raw API response is correctly parsed.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement the Concrete GeminiProvider Class",
+            "description": "Create the `GeminiProvider` class that inherits from `BaseAIProvider` and implements the specific logic for interacting with the Google Gemini API.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement the `generate_code_suggestion` and `review_code` methods using the Google Gemini SDK. This involves handling Gemini-specific request structures, authentication, and response parsing to conform to the `BaseAIProvider` contract.",
+            "status": "done",
+            "testStrategy": "Use `unittest.mock` to patch the Gemini API client. Write unit tests to confirm that prompts are formatted correctly for the Gemini API and that its specific response structure is successfully parsed and normalized into the application's standard format.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Create a Factory Function for AI Provider Instantiation",
+            "description": "Develop a factory function that dynamically selects and instantiates the correct AI provider class based on the application's configuration file.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "The function, named `get_ai_provider()`, will read the 'provider' name from the configuration system (established in Task 1). It will use a dictionary or conditional logic to return an initialized instance of the corresponding provider class.",
+            "status": "done",
+            "testStrategy": "Write unit tests that mock the configuration reader. Test that the factory returns the correct provider instance for each supported value (e.g., returns `OpenAIProvider` when config is 'openai'). Test that it raises a specific error for an unsupported provider name.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 6,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Break down the creation of the AI provider service layer. Create subtasks for: 1. Designing a common `BaseAIProvider` interface with methods like `generate_code_suggestion` and `review_code`. 2. Implementing a concrete provider class for a specific service (e.g., `OpenAIProvider`) that handles its API requests and responses. 3. Implementing a second concrete provider class (e.g., `GeminiProvider`). 4. Creating a factory function that reads the application configuration and returns an instance of the correct provider."
+      },
+      {
+        "id": "4",
+        "title": "Implement Core Tandem Coding Loop (`codetandem next`)",
+        "description": "Develop the `codetandem next` command, which is the core user interaction. The AI analyzes the project and state, writes foundational code, and inserts a specific `// TODO` task for the user.",
+        "details": "This command will: 1. Read `modules.json` and `codetandem.state.json` to determine the current learning objective. 2. Construct a detailed prompt for the AI service (from Task 3) including the current file's content, the learning objective, and the overall project context. 3. The AI will return modified code. 4. The command will parse the AI's response, find the file to modify, and insert the new code along with a formatted `// TODO: [Module X.Y] ...` comment at the correct location. 5. It will output the file and line number to the user.",
+        "testStrategy": "Create a controlled test environment with a simple project and state file. Mock the AI service to return predictable code modifications. Run `codetandem next` and assert that the correct file is modified in the expected way. Test edge cases like an empty file or a file that doesn't exist.",
+        "priority": "high",
+        "dependencies": [
+          "2",
+          "3"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Read and Load Project State for `codetandem next`",
+            "description": "Implement the logic to read and parse `modules.json` and `codetandem.state.json` to determine the current module, task, and learning objective.",
+            "dependencies": [],
+            "details": "This function will locate the two JSON files in the project root, read their contents, and load them into a structured data object. It must handle potential errors like missing files or invalid JSON.",
+            "status": "done",
+            "testStrategy": "Unit test with mock `modules.json` and `codetandem.state.json` files. Test cases should include valid files, malformed JSON, and missing files to ensure robust error handling.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement Prompt Engineering for AI Code Generation",
+            "description": "Develop the logic to construct a comprehensive prompt for the AI service, incorporating the current file's content, learning objective, and overall project context.",
+            "dependencies": [
+              1
+            ],
+            "details": "This module will assemble a detailed prompt string. It needs to include the learning objective from the state, the full content of the target file, and potentially a summary of the project structure to give the AI enough context.",
+            "status": "done",
+            "testStrategy": "Create unit tests that take a mock state object as input and assert that the generated prompt string contains all the required sections (objective, file content, context) in the correct format.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Integrate AI Service Client for Code Generation",
+            "description": "Implement the function to send the constructed prompt to the AI service and handle the response, including success and error cases.",
+            "dependencies": [
+              2
+            ],
+            "details": "This involves making an API call to the AI service endpoint. The implementation must handle network errors, API rate limits, and parse the returned data. It should extract the raw code modification payload from the AI's response.",
+            "status": "done",
+            "testStrategy": "Mock the AI service API. Test the client's ability to handle successful responses (e.g., HTTP 200 with valid JSON), as well as error responses (e.g., HTTP 429, 500) and network timeouts.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Develop Parser for AI-Generated Code Modifications",
+            "description": "Create a robust parser to extract the target file path, the new code block, and the location for insertion from the AI's structured response.",
+            "dependencies": [
+              3
+            ],
+            "details": "The AI response is expected in a specific format (e.g., JSON with keys for 'file_path', 'code_block'). This parser will validate the response structure and extract these values, handling cases where the format is incorrect.",
+            "status": "done",
+            "testStrategy": "Unit test the parser with various mock AI response strings. Include tests for perfectly formatted responses, responses with missing keys, and responses with malformed data to ensure it fails gracefully.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Apply Code Changes and Insert TODO Comment",
+            "description": "Write the logic to safely modify the target file on the user's file system, inserting the AI-generated code and the formatted `// TODO` comment at the correct location.",
+            "dependencies": [
+              4
+            ],
+            "details": "This function will take the parsed file path and code. It will read the target file, insert the new code and the `// TODO: [Module X.Y] ...` comment, and write the changes back to disk. It must also output the file and line number to the user's console.",
+            "status": "done",
+            "testStrategy": "Use a temporary directory with mock project files for integration testing. Run the function and assert that the target file's content is modified exactly as expected. Test edge cases like inserting at the beginning, middle, and end of a file.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 8,
+        "recommendedSubtasks": 5,
+        "expansionPrompt": "Break down the implementation of the core `codetandem next` command. Create subtasks for: 1. Reading the current project state and learning objective. 2. Implementing the prompt engineering logic to construct a comprehensive context for the AI. 3. Calling the AI service and handling the response. 4. Developing a robust parser to extract the target file and code changes from the AI's response. 5. Implementing the logic to safely apply the code modifications to the user's file system and insert the `// TODO` comment."
+      },
+      {
+        "id": "5",
+        "title": "Implement Interactive Code Review (`codetandem submit`)",
+        "description": "Build the `codetandem submit` command for users to submit their completed tasks for static analysis and AI-powered review.",
+        "details": "The command will: 1. Identify the user's code written for the last `// TODO`. 2. Run a language-appropriate linter (e.g., `pylint` for Python, `clang-tidy` for C++) and report errors. 3. If linting passes, send the user's code, the original `// TODO` prompt, and relevant API docs context to the AI service for functional and conceptual review. 4. On success, update the skill score in `codetandem.state.json`. On failure, provide the AI's constructive feedback to the user.",
+        "testStrategy": "Unit test the code extraction logic to ensure it correctly identifies the user's changes. Create test cases with correct code, code with linting errors, and code that is functionally incorrect. Mock the AI service to simulate success and failure responses. Verify that `codetandem.state.json` is updated correctly after a successful submission.",
+        "priority": "high",
+        "dependencies": [
+          "4"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Develop Parser to Extract User Code for Review",
+            "description": "Implement a robust parser that scans the relevant source file, identifies the last `// TODO` comment block, and extracts the code written by the user to fulfill that task.",
+            "dependencies": [],
+            "details": "The parser needs to handle multi-line comments and various coding styles. It should locate the specific `// TODO` marker associated with the current task in `codetandem.state.json` and capture all subsequent code.",
+            "status": "done",
+            "testStrategy": "Unit test the parser with various file structures: code before the TODO, code after, multiple TODOs, and edge cases like empty files or no user code. Verify it accurately extracts the intended code block.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Integrate Language-Appropriate Static Analysis Linter",
+            "description": "Integrate a mechanism to run a language-appropriate linter (e.g., `pylint`, `clang-tidy`) on the user's extracted code. The command should halt and report errors if the linter fails.",
+            "dependencies": [
+              1
+            ],
+            "details": "This involves creating a configurable system to invoke external linter processes. The implementation should capture stdout/stderr from the linter, parse the output for errors, and present them to the user.",
+            "status": "done",
+            "testStrategy": "Create test code snippets with known linting errors for supported languages. Run the integration and assert that it correctly identifies and reports the errors. Also test with clean code to ensure it passes successfully.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement AI Prompt Generation for Code Review",
+            "description": "Create the logic to construct a detailed prompt for the AI service. The prompt must include the user's code, the original `// TODO` task description, and any relevant context like API documentation.",
+            "dependencies": [
+              2
+            ],
+            "details": "The prompt needs to instruct the AI to act as a code reviewer, checking for correctness and style. It should request a structured response (e.g., JSON with a 'success' flag and 'feedback' text).",
+            "status": "done",
+            "testStrategy": "Unit test the prompt generation logic to ensure all required components (code, task, context) are included. Manually inspect generated prompts for clarity and effectiveness in guiding the AI's response.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Parse AI Service Response and Determine Submission Outcome",
+            "description": "Implement the logic to receive and parse the structured response from the AI service. This includes determining if the submission was successful and extracting the constructive feedback for the user.",
+            "dependencies": [
+              3
+            ],
+            "details": "The system must handle both successful and failed API calls. It will parse the expected JSON response from the AI, check the 'success' status, and format the 'feedback' text for display to the user.",
+            "status": "done",
+            "testStrategy": "Mock the AI service API to return various responses: success, failure with feedback, malformed JSON, and network errors. Verify that the parsing logic correctly handles each case and extracts the relevant information.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Update User Progress and Skill Score in State File",
+            "description": "Upon a successful code submission as determined by the AI review, update the `codetandem.state.json` file. This includes incrementing the skill score for the current module and advancing progress.",
+            "dependencies": [
+              4
+            ],
+            "details": "This task involves reading the current state from `codetandem.state.json`, modifying the relevant fields (e.g., `skill_scores[current_module]`), and writing the updated state back to the file atomically.",
+            "status": "done",
+            "testStrategy": "Create a pre-test `codetandem.state.json`. Simulate a successful submission and verify that the skill score and progress markers in the state file are updated correctly. Ensure that on a failed submission, the state file remains unchanged.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 8,
+        "recommendedSubtasks": 5,
+        "expansionPrompt": "Break down the `codetandem submit` command. Create subtasks for: 1. Developing a parser to find the relevant `// TODO` and extract the user's code changes. 2. Integrating a static analysis/linter tool and running it on the extracted code. 3. Implementing the prompt engineering logic to request a code review from the AI service. 4. Parsing the AI's feedback and determining if the submission was successful. 5. Updating the skill score and progress in `codetandem.state.json`."
+      },
+      {
+        "id": "6",
+        "title": "Implement Dynamic Scaffolding and Skill Scoring",
+        "description": "Enhance the `codetandem next` and `submit` commands to support dynamic scaffolding by tracking and using a 'skill score' for each module.",
+        "details": "Modify `codetandem.state.json` to include a `skill_scores` object mapping module IDs to a score (e.g., 0-10). The `submit` command will increment this score on success. The `next` command will read this score before generating a task. The prompt sent to the AI will be adjusted based on the score: low scores request highly detailed `// TODO` comments with snippets, medium scores request goal-oriented comments, and high scores request conceptual tasks.",
+        "testStrategy": "Test the `submit` command to ensure it correctly increments the skill score for the current module. Write unit tests for the prompt generation logic in the `next` command, providing different skill scores as input and asserting that the generated prompt includes instructions for the correct level of detail (e.g., 'provide snippets', 'provide conceptual goal').",
+        "priority": "medium",
+        "dependencies": [
+          "4",
+          "5"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update State Schema and `submit` Command for Skill Scoring",
+            "description": "Modify the `codetandem.state.json` file to include a `skill_scores` object. Update the `submit` command to increment the relevant module's skill score upon successful task completion.",
+            "dependencies": [],
+            "details": "Define the structure for `skill_scores` in `codetandem.state.json` as a map of module IDs to integer scores. In the `submit` command's success logic, retrieve the current module ID, read the current score, increment it, and write it back to the state file.",
+            "status": "done",
+            "testStrategy": "Unit test the state management functions to ensure they can read/write skill scores correctly. In integration tests for the `submit` command, mock a successful submission and verify that the skill score in `codetandem.state.json` is incremented as expected.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Enhance `next` Command to Read Skill Score",
+            "description": "Modify the `codetandem next` command to read the current module's skill score from the `codetandem.state.json` file before it generates a new task.",
+            "dependencies": [
+              1
+            ],
+            "details": "In the `next` command's execution flow, add a step to open and parse `codetandem.state.json`. Extract the skill score for the current active module. If a score doesn't exist for the module, default to a starting value (e.g., 0). Pass this score to the prompt generation logic.",
+            "status": "done",
+            "testStrategy": "Create a mock `codetandem.state.json` with various skill scores. Write unit tests for the `next` command's data loading logic to ensure it correctly retrieves the score for the active module and handles cases where the score is missing.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement Conditional Prompt Logic Based on Skill Score",
+            "description": "Implement the logic within the `next` command to dynamically adjust the AI prompt based on the user's skill score for the current module, requesting different levels of scaffolding.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create a prompt generation function that accepts the skill score. Use conditional logic to select prompt text. For low scores (0-3), request detailed `// TODO` comments with code snippets. For medium scores (4-7), request goal-oriented comments. For high scores (8-10), request conceptual tasks.",
+            "status": "done",
+            "testStrategy": "Write unit tests for the prompt generation function. Pass in different scores (e.g., 1, 5, 9) and assert that the returned prompt string contains keywords or phrases corresponding to 'detailed snippets', 'goal-oriented', and 'conceptual task' respectively.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 5,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Break down the implementation of dynamic scaffolding. Create subtasks for: 1. Modifying the `codetandem.state.json` schema and updating the `submit` command to increment a module's skill score upon success. 2. Enhancing the `next` command to read the current skill score before generating a task. 3. Implementing the conditional prompt logic within the `next` command to request different levels of detail from the AI based on the user's skill score."
+      },
+      {
+        "id": "7",
+        "title": "Implement User Control Commands (`hint`, `solve`, `set_level`)",
+        "description": "Develop the user-facing commands to manage the learning process: `hint` for getting help, `solve` for AI completion, and `set_level` for manual difficulty override.",
+        "details": "`hint`: Queries the AI with the current task context for a hint. Subsequent calls should generate more explicit hints. `solve`: Instructs the AI to complete the current `// TODO`, writes the solution to the file, and marks the task as 'skipped' in `codetandem.state.json`. `set_level`: Manually sets a flag in the state file that overrides the skill score-based scaffolding, forcing it to 'easy', 'medium', or 'hard'.",
+        "testStrategy": "For each command, test its interaction with the state file and the AI service. For `hint`, mock the AI to test that repeated calls result in different prompts. For `solve`, verify the code is written correctly and the state is updated to 'skipped'. For `set_level`, verify the state file is updated and that the next `codetandem next` command respects the override.",
+        "priority": "medium",
+        "dependencies": [
+          "4",
+          "6"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement the `hint` command for user assistance",
+            "description": "Develop the `hint` command that allows a user to request help on the current task. The command should query the AI with the task context and provide progressively more explicit hints on subsequent calls.",
+            "dependencies": [],
+            "details": "Create the CLI entry point for `codetandem hint`. This command will read the current state from `codetandem.state.json` to identify the active task. It will then query the AI service, providing the task context. Logic must be included to track the number of hints requested for the current task and adjust the AI prompt to ask for a more detailed hint each time.",
+            "status": "done",
+            "testStrategy": "Mock the AI service to control its responses. Test that the first call to `hint` sends a standard request. Verify that a second call for the same task sends a modified prompt asking for a more explicit hint. Ensure the hint count is correctly tracked in the state file.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement the `solve` command for AI task completion",
+            "description": "Build the `solve` command which instructs the AI to complete the current `// TODO` block. The command must write the generated solution into the source file and update the task's status to 'skipped' in the state file.",
+            "dependencies": [],
+            "details": "Implement the `codetandem solve` command handler. This function will fetch the current task details, send a request to the AI to generate the complete code solution, and then parse the response. The extracted code will be used to replace the `// TODO` block in the target file. Finally, the command must update `codetandem.state.json` to mark the task as 'skipped'.",
+            "status": "done",
+            "testStrategy": "Create a test file with a placeholder `// TODO` comment. Mock the AI service to return a predefined code block. Execute the `solve` command and assert that the file's content is correctly updated with the AI's solution. Verify that the corresponding task status in `codetandem.state.json` is changed to 'skipped'.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement `set_level` command and integrate with `next` command",
+            "description": "Create the `set_level` command to allow manual override of the difficulty level ('easy', 'medium', 'hard'). The `next` command must be updated to respect this override, bypassing the skill score-based scaffolding.",
+            "dependencies": [],
+            "details": "Develop the `codetandem set_level <level>` command. It should validate the provided level and update a new `difficulty_override` field in `codetandem.state.json`. Modify the existing `next` command's logic to check for this field. If the override is set, the prompt generation for the AI should use the specified difficulty level instead of relying on the dynamic skill score.",
+            "status": "done",
+            "testStrategy": "Test the `set_level` command with valid and invalid arguments, asserting that the state file is updated correctly only for valid inputs. For the integration test, set a difficulty override in a mock state file and call the `next` command. Verify that the prompt sent to the mocked AI service reflects the overridden difficulty level, not the one that would be derived from the skill score.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 6,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Break down the implementation of user control commands. Create subtasks for: 1. Building the `hint` command, which queries the AI for help on the current task. 2. Building the `solve` command, which uses the AI to complete the task and updates the state file. 3. Building the `set_level` command to manually override the difficulty and ensuring the `next` command respects this setting."
+      },
+      {
+        "id": "8",
+        "title": "Enhance `init` with Documentation Ingestion and Taskmaster Integration",
+        "description": "Extend the `codetandem init` command to process optional `--docs` and `--taskmaster` flags, creating a vector database for documentation and a Curriculum-Backlog Map.",
+        "details": "For `--docs`, use a library like `BeautifulSoup` or a dedicated scraping framework to fetch and parse content from URLs or local HTML files. Use a library like `langchain` or `llama-index` to chunk and embed this content into a local vector store. For `--taskmaster`, parse the `prd.md` and `tasks.json` files. Create a mapping in `modules.json` that links curriculum topics to specific task IDs from the Taskmaster backlog, respecting dependencies.",
+        "testStrategy": "Test the documentation ingestor with a sample local HTML file and a live URL, verifying that the vector store is created and can be queried. Test the Taskmaster integration with a sample `tasks.json` and `prd.md`, asserting that the generated `modules.json` contains the correct Curriculum-Backlog Map.",
+        "priority": "medium",
+        "dependencies": [
+          "2"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Documentation Ingestion Pipeline for `--docs` Flag",
+            "description": "Develop the functionality to process documentation from URLs or local files. This includes fetching content using a scraper, parsing HTML, chunking the text into manageable pieces, and generating vector embeddings.",
+            "dependencies": [],
+            "details": "Use a library like BeautifulSoup for scraping and parsing HTML content. Implement a text chunking strategy, such as recursive character splitting, and use a library like `langchain` or `sentence-transformers` to create vector embeddings from the text chunks.",
+            "status": "done",
+            "testStrategy": "Write unit tests for the scraping module using a local HTML file and a mock web response. Test the chunking and embedding logic to ensure it produces vectors of the correct dimension and format.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Integrate Local Vector Database for Documentation Storage",
+            "description": "Set up and integrate a local vector store (e.g., FAISS, ChromaDB) to save the embeddings generated from the documentation. This will enable efficient similarity searches for context retrieval later.",
+            "dependencies": [
+              1
+            ],
+            "details": "Select a suitable local vector database library. Implement the logic to create a new database instance if one doesn't exist, and add the generated document embeddings and their corresponding metadata to it when `init --docs` is executed.",
+            "status": "done",
+            "testStrategy": "After running the ingestion pipeline from subtask 1, verify that the vector database file or directory is created. Write a test script to load the database and perform a sample similarity search to retrieve relevant document chunks.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement Parsers for Taskmaster `prd.md` and `tasks.json`",
+            "description": "Create robust parsers to extract structured data from the `prd.md` (Product Requirements Document) and the `tasks.json` backlog file, which are used for the Taskmaster integration.",
+            "dependencies": [],
+            "details": "For `prd.md`, use a Markdown parsing library to extract curriculum topics or sections. For `tasks.json`, use a standard JSON parser to load the task backlog, ensuring validation of the expected structure (e.g., task IDs, descriptions, dependencies).",
+            "status": "done",
+            "testStrategy": "Create sample `prd.md` and `tasks.json` files with various structures (simple, complex, malformed). Write unit tests to assert that the parsers correctly extract the required information and handle errors gracefully.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Develop Logic for Curriculum-Backlog Map Generation",
+            "description": "Create the logic that maps curriculum topics (from `prd.md`) to specific task IDs (from `tasks.json`). This mapping will be integrated into the `modules.json` file.",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement an algorithm to link topics from the parsed PRD to tasks from the parsed backlog. This could involve keyword matching or explicit mapping rules. The output should be a new section within the `modules.json` file that represents this Curriculum-Backlog Map.",
+            "status": "done",
+            "testStrategy": "Using the parsed data from subtask 3's tests, test the mapping logic. Assert that the generated `modules.json` file contains the correct and complete mappings between curriculum topics and task IDs.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Integrate New Flags and Logic into `init` Command",
+            "description": "Modify the existing `codetandem init` command's argument parser to accept the new optional flags (`--docs`, `--taskmaster`) and wire up the new documentation and Taskmaster functionalities.",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Use a command-line argument library like `argparse` or `click` to add the new optional flags. Add conditional logic within the `init` command's main function to trigger the documentation ingestion and/or the Taskmaster integration when the respective flags are present.",
+            "status": "done",
+            "testStrategy": "Run end-to-end tests of the `init` command. Test cases should include: 1) `init` without flags (legacy behavior). 2) `init --docs <path>`. 3) `init --taskmaster <path>`. 4) `init` with both flags. Verify that the correct artifacts (vector store, updated `modules.json`) are created in each case.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 7,
+        "recommendedSubtasks": 5,
+        "expansionPrompt": "Break down the enhancement of the `init` command. Create subtasks for: 1. Implementing the documentation ingestion pipeline using the `--docs` flag, including scraping, chunking, and embedding. 2. Integrating a local vector database to store and query the ingested documentation. 3. Implementing the Taskmaster `prd.md` and `tasks.json` parsers. 4. Developing the logic to create the Curriculum-Backlog Map and integrate it into `modules.json`. 5. Adding the new optional flags and logic to the existing `init` command."
+      },
+      {
+        "id": "9",
+        "title": "Implement Module Assessment (`codetandem test`)",
+        "description": "Create the `codetandem test` command, which is triggered at the end of a module to generate and evaluate a 'capstone' task.",
+        "details": "When a module's tasks are completed, the tool should prompt the user to run `codetandem test`. This command will prompt the AI to generate a comprehensive task that combines skills from the completed module. The task will be presented without any `// TODO` scaffolding. The user will implement it and use `codetandem submit` to have it graded. A successful submission marks the module as complete in `codetandem.state.json` and unlocks the next one.",
+        "testStrategy": "Create a test state where a module is ready for assessment. Run `codetandem test` and mock the AI to ensure it's prompted to create a 'capstone' task. Simulate a user submission and test the pass/fail logic, verifying that the state file is updated correctly to mark the module as complete and advance the user to the next one.",
+        "priority": "medium",
+        "dependencies": [
+          "5",
+          "6"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Develop Logic to Detect Module Completion",
+            "description": "Implement the logic to check `codetandem.state.json` and determine if all tasks within the current module are completed, which should trigger a prompt for the user to run `codetandem test`.",
+            "dependencies": [],
+            "details": "This logic should be integrated into the `codetandem submit` command's success path. After a task is successfully submitted, the system must check if it was the last remaining task for the current module. If so, it should print a message to the console advising the user to run `codetandem test` to proceed.",
+            "status": "done",
+            "testStrategy": "Create mock `codetandem.state.json` files representing a module with one task left. Simulate a successful submission and assert that the 'run test' prompt is displayed. Test with a module that has multiple tasks left and verify the prompt is not shown.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement `codetandem test` Command for Capstone Task Generation",
+            "description": "Create the `codetandem test` command. This command will use prompt engineering to request a comprehensive 'capstone' task from the AI, based on the skills learned in the just-completed module.",
+            "dependencies": [
+              1
+            ],
+            "details": "The command will read the completed module's topics and learning objectives from `modules.json`. It will then construct a prompt for the AI asking for a single, unscaffolded coding challenge that integrates these topics. The generated task will be saved to a new file, e.g., `module_test.py`, and the state file will be updated to indicate an assessment is in progress.",
+            "status": "done",
+            "testStrategy": "Mock the AI service. Run `codetandem test` for a specific module. Verify that the prompt sent to the AI correctly references the module's skills. Check that the AI's response is correctly written to a new file and the state reflects 'assessment_pending'.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Adapt `codetandem submit` for Capstone Task Grading",
+            "description": "Modify the existing `codetandem submit` command to differentiate between regular tasks and capstone assessment tasks, applying a specific grading rubric for the assessment.",
+            "dependencies": [
+              2
+            ],
+            "details": "The `submit` command must check the state in `codetandem.state.json` to see if an assessment is in progress. If so, it will send the user's solution along with the original capstone prompt to the AI for a pass/fail evaluation, rather than the usual skill-building feedback.",
+            "status": "done",
+            "testStrategy": "Create a test scenario with an active assessment in the state file. Run `codetandem submit`. Mock the AI service to return both 'pass' and 'fail' responses. Verify that the command handles both outcomes correctly and provides appropriate user feedback.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement State Transition on Successful Assessment",
+            "description": "Upon a successful submission of a capstone task, update `codetandem.state.json` to mark the current module as complete and unlock the next module in the curriculum.",
+            "dependencies": [
+              3
+            ],
+            "details": "After the `submit` command receives a 'pass' from the AI for a capstone task, it must modify `codetandem.state.json`. This includes adding the completed module ID to a 'completed_modules' list, clearing the 'assessment_pending' state, and setting the 'current_module' to the next one in the sequence from `modules.json`.",
+            "status": "done",
+            "testStrategy": "Simulate a successful capstone submission by mocking the AI response. Inspect the `codetandem.state.json` file before and after the command runs. Assert that the module is marked as complete and the current module pointer has advanced to the next one.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 5,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Break down the implementation of the `codetandem test` command. Create subtasks for: 1. Developing the logic to determine when a module is complete and ready for assessment. 2. Implementing the prompt engineering to have the AI generate a suitable 'capstone' task for the module. 3. Modifying the `submit` command to handle the grading of these assessment tasks. 4. Implementing the state transition logic to mark a module as complete and unlock the next one upon a successful test."
+      },
+      {
+        "id": "10",
+        "title": "Package for Cross-Platform Distribution",
+        "description": "Create build and packaging scripts to produce standalone executables for Windows, macOS, and Linux, ensuring the CLI tool is easily installable for all target users.",
+        "details": "Use a tool like `PyInstaller` or `cx_Freeze` for Python to bundle the application and its dependencies into a single executable for each target OS. Set up a CI/CD pipeline (e.g., using GitHub Actions) to automate the build process for each platform. Write clear installation instructions in the project's README file.",
+        "testStrategy": "Build the executable on each target platform (Windows, macOS, Linux). Run the executables in a clean environment to ensure they start correctly and all dependencies are included. Perform a basic smoke test by running the `init` and `config` commands to confirm functionality.",
+        "priority": "low",
+        "dependencies": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configure PyInstaller for Standalone Executable Creation",
+            "description": "Set up and configure PyInstaller to bundle the Python application and all its dependencies into a single, standalone executable file. This involves creating a spec file and testing the build locally.",
+            "dependencies": [],
+            "details": "Create a `build.spec` file for PyInstaller. Configure it to include all necessary data files, hidden imports, and assets. Test the build process locally on one development machine to ensure a working executable is produced before automating.",
+            "status": "done",
+            "testStrategy": "Run `pyinstaller build.spec` locally. Execute the generated binary to ensure it runs without errors and that all core commands (`init`, `config`) are functional. Check for missing dependencies or data files.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Create Base GitHub Actions Workflow for Automated Builds",
+            "description": "Create the initial GitHub Actions workflow file (`.github/workflows/build.yml`) to automate the packaging process. This workflow will trigger on pushes to the main branch and set up the basic environment.",
+            "dependencies": [
+              1
+            ],
+            "details": "Define a new workflow file. Set up the trigger conditions (e.g., `on: push: branches: [ main ]`). Create a single initial job that checks out the code, sets up the correct Python version, and installs dependencies from `requirements.txt`.",
+            "status": "done",
+            "testStrategy": "Push a commit to a test branch with the new workflow file. Verify that the action triggers successfully in the GitHub Actions tab and that the initial setup steps (checkout, install dependencies) complete without errors.",
+            "updatedAt": "2025-10-25T23:23:50.213Z",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Configure Separate Build Jobs for Windows, macOS, and Linux",
+            "description": "Expand the GitHub Actions workflow to include a build matrix or separate jobs for Windows, macOS, and Linux. Each job will build the executable for its respective platform and upload it as a build artifact.",
+            "dependencies": [
+              2
+            ],
+            "details": "Use a `strategy: matrix` in the GitHub Actions workflow to define `os: [windows-latest, macos-latest, ubuntu-latest]`. For each OS, run the PyInstaller build command. Use the `actions/upload-artifact` action to save the generated executable for each platform.",
+            "status": "done",
+            "testStrategy": "Trigger the workflow and check that three separate jobs run, one for each OS. Verify that each job successfully completes the build step and uploads an artifact. Download the artifacts and perform a quick smoke test on each corresponding OS to ensure they are executable.",
+            "parentId": "undefined",
+            "updatedAt": "2025-10-25T23:24:21.610Z"
+          },
+          {
+            "id": 4,
+            "title": "Update README with Cross-Platform Installation Instructions",
+            "description": "Write clear, step-by-step installation instructions for the packaged executables for Windows, macOS, and Linux users. Add this documentation to the project's README.md file.",
+            "dependencies": [
+              3
+            ],
+            "details": "In README.md, create a new 'Installation' section. Provide links to the GitHub Actions build artifacts or releases page. Explain how to download the correct file for their OS. Include instructions for potential OS-specific steps, like making the file executable on Linux/macOS (`chmod +x`) or dealing with security warnings.",
+            "status": "done",
+            "testStrategy": "Have a team member unfamiliar with the process follow the instructions on each of the three platforms (Windows, macOS, Linux). Verify they can successfully download and run the application. Refine the documentation based on their feedback.",
+            "parentId": "undefined",
+            "updatedAt": "2025-10-25T23:25:30.451Z"
+          }
+        ],
+        "complexity": 7,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Break down the task of packaging the application. Create subtasks for: 1. Setting up and configuring a packaging tool like PyInstaller to create a standalone executable. 2. Creating a GitHub Actions workflow to automate the build process. 3. Configuring separate build jobs within the workflow for Linux, Windows, and macOS. 4. Writing clear, cross-platform installation instructions for the README.",
+        "updatedAt": "2025-10-25T23:25:30.451Z"
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2025-10-25T23:25:30.452Z",
+      "taskCount": 10,
+      "completedCount": 10,
+      "tags": [
+        "master"
+      ]
+    }
+  }
+}

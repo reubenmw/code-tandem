@@ -1,0 +1,43 @@
+# Task ID: 8
+# Title: Enhance `init` with Documentation Ingestion and Taskmaster Integration
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Extend the `codetandem init` command to process optional `--docs` and `--taskmaster` flags, creating a vector database for documentation and a Curriculum-Backlog Map.
+# Details:
+For `--docs`, use a library like `BeautifulSoup` or a dedicated scraping framework to fetch and parse content from URLs or local HTML files. Use a library like `langchain` or `llama-index` to chunk and embed this content into a local vector store. For `--taskmaster`, parse the `prd.md` and `tasks.json` files. Create a mapping in `modules.json` that links curriculum topics to specific task IDs from the Taskmaster backlog, respecting dependencies.
+
+# Test Strategy:
+Test the documentation ingestor with a sample local HTML file and a live URL, verifying that the vector store is created and can be queried. Test the Taskmaster integration with a sample `tasks.json` and `prd.md`, asserting that the generated `modules.json` contains the correct Curriculum-Backlog Map.
+
+# Subtasks:
+## 1. Implement Documentation Ingestion Pipeline for `--docs` Flag [pending]
+### Dependencies: None
+### Description: Develop the functionality to process documentation from URLs or local files. This includes fetching content using a scraper, parsing HTML, chunking the text into manageable pieces, and generating vector embeddings.
+### Details:
+Use a library like BeautifulSoup for scraping and parsing HTML content. Implement a text chunking strategy, such as recursive character splitting, and use a library like `langchain` or `sentence-transformers` to create vector embeddings from the text chunks.
+
+## 2. Integrate Local Vector Database for Documentation Storage [pending]
+### Dependencies: 8.1
+### Description: Set up and integrate a local vector store (e.g., FAISS, ChromaDB) to save the embeddings generated from the documentation. This will enable efficient similarity searches for context retrieval later.
+### Details:
+Select a suitable local vector database library. Implement the logic to create a new database instance if one doesn't exist, and add the generated document embeddings and their corresponding metadata to it when `init --docs` is executed.
+
+## 3. Implement Parsers for Taskmaster `prd.md` and `tasks.json` [pending]
+### Dependencies: None
+### Description: Create robust parsers to extract structured data from the `prd.md` (Product Requirements Document) and the `tasks.json` backlog file, which are used for the Taskmaster integration.
+### Details:
+For `prd.md`, use a Markdown parsing library to extract curriculum topics or sections. For `tasks.json`, use a standard JSON parser to load the task backlog, ensuring validation of the expected structure (e.g., task IDs, descriptions, dependencies).
+
+## 4. Develop Logic for Curriculum-Backlog Map Generation [pending]
+### Dependencies: 8.3
+### Description: Create the logic that maps curriculum topics (from `prd.md`) to specific task IDs (from `tasks.json`). This mapping will be integrated into the `modules.json` file.
+### Details:
+Implement an algorithm to link topics from the parsed PRD to tasks from the parsed backlog. This could involve keyword matching or explicit mapping rules. The output should be a new section within the `modules.json` file that represents this Curriculum-Backlog Map.
+
+## 5. Integrate New Flags and Logic into `init` Command [pending]
+### Dependencies: 8.2, 8.4
+### Description: Modify the existing `codetandem init` command's argument parser to accept the new optional flags (`--docs`, `--taskmaster`) and wire up the new documentation and Taskmaster functionalities.
+### Details:
+Use a command-line argument library like `argparse` or `click` to add the new optional flags. Add conditional logic within the `init` command's main function to trigger the documentation ingestion and/or the Taskmaster integration when the respective flags are present.
+

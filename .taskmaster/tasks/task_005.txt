@@ -1,0 +1,43 @@
+# Task ID: 5
+# Title: Implement Interactive Code Review (`codetandem submit`)
+# Status: pending
+# Dependencies: 4
+# Priority: high
+# Description: Build the `codetandem submit` command for users to submit their completed tasks for static analysis and AI-powered review.
+# Details:
+The command will: 1. Identify the user's code written for the last `// TODO`. 2. Run a language-appropriate linter (e.g., `pylint` for Python, `clang-tidy` for C++) and report errors. 3. If linting passes, send the user's code, the original `// TODO` prompt, and relevant API docs context to the AI service for functional and conceptual review. 4. On success, update the skill score in `codetandem.state.json`. On failure, provide the AI's constructive feedback to the user.
+
+# Test Strategy:
+Unit test the code extraction logic to ensure it correctly identifies the user's changes. Create test cases with correct code, code with linting errors, and code that is functionally incorrect. Mock the AI service to simulate success and failure responses. Verify that `codetandem.state.json` is updated correctly after a successful submission.
+
+# Subtasks:
+## 1. Develop Parser to Extract User Code for Review [pending]
+### Dependencies: None
+### Description: Implement a robust parser that scans the relevant source file, identifies the last `// TODO` comment block, and extracts the code written by the user to fulfill that task.
+### Details:
+The parser needs to handle multi-line comments and various coding styles. It should locate the specific `// TODO` marker associated with the current task in `codetandem.state.json` and capture all subsequent code.
+
+## 2. Integrate Language-Appropriate Static Analysis Linter [pending]
+### Dependencies: 5.1
+### Description: Integrate a mechanism to run a language-appropriate linter (e.g., `pylint`, `clang-tidy`) on the user's extracted code. The command should halt and report errors if the linter fails.
+### Details:
+This involves creating a configurable system to invoke external linter processes. The implementation should capture stdout/stderr from the linter, parse the output for errors, and present them to the user.
+
+## 3. Implement AI Prompt Generation for Code Review [pending]
+### Dependencies: 5.2
+### Description: Create the logic to construct a detailed prompt for the AI service. The prompt must include the user's code, the original `// TODO` task description, and any relevant context like API documentation.
+### Details:
+The prompt needs to instruct the AI to act as a code reviewer, checking for correctness and style. It should request a structured response (e.g., JSON with a 'success' flag and 'feedback' text).
+
+## 4. Parse AI Service Response and Determine Submission Outcome [pending]
+### Dependencies: 5.3
+### Description: Implement the logic to receive and parse the structured response from the AI service. This includes determining if the submission was successful and extracting the constructive feedback for the user.
+### Details:
+The system must handle both successful and failed API calls. It will parse the expected JSON response from the AI, check the 'success' status, and format the 'feedback' text for display to the user.
+
+## 5. Update User Progress and Skill Score in State File [pending]
+### Dependencies: 5.4
+### Description: Upon a successful code submission as determined by the AI review, update the `codetandem.state.json` file. This includes incrementing the skill score for the current module and advancing progress.
+### Details:
+This task involves reading the current state from `codetandem.state.json`, modifying the relevant fields (e.g., `skill_scores[current_module]`), and writing the updated state back to the file atomically.
+

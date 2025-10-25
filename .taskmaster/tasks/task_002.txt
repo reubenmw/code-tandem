@@ -1,0 +1,37 @@
+# Task ID: 2
+# Title: Implement Core Project Initialization (`codetandem init`)
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Develop the `codetandem init` command to scan a project directory and curriculum file, and generate the initial state files `modules.json` and `codetandem.state.json`.
+# Details:
+The command will take `--project` and `--curriculum` paths. It needs to recursively walk the project directory to build a file tree representation. It must also parse the provided Markdown curriculum file into a structured format. Based on these inputs, it will generate two JSON files: `modules.json` (the structured learning plan derived from the curriculum) and `codetandem.state.json` (to track progress, initialized to the first module with a default skill score).
+
+# Test Strategy:
+Create several mock project directories and curriculum files (simple, complex, empty). Write unit tests to verify that the file scanning and Markdown parsing logic works correctly. Run the `init` command against these mock projects and assert that the generated `modules.json` and `codetandem.state.json` files match the expected structure and content.
+
+# Subtasks:
+## 1. Develop Project Directory File Tree Scanner [pending]
+### Dependencies: None
+### Description: Implement a module that recursively scans a specified project directory and builds a structured, in-memory representation of its file and folder hierarchy.
+### Details:
+The scanner should ignore common unnecessary files/directories like `.git`, `node_modules`, and `__pycache__`. The output should be a JSON-serializable object representing the tree.
+
+## 2. Create Robust Markdown Curriculum Parser [pending]
+### Dependencies: None
+### Description: Develop a parser to read the Markdown curriculum file and extract a structured list of learning modules, their objectives, and any associated metadata.
+### Details:
+Use a suitable Markdown parsing library. The parser must identify specific heading levels (e.g., H1 for module titles, H2 for objectives) and list items for details, converting them into a structured object.
+
+## 3. Implement `modules.json` Generation Logic [pending]
+### Dependencies: 2.2
+### Description: Design the JSON schema for `modules.json` and create the logic to transform the parsed curriculum data from the Markdown file into this final, structured format.
+### Details:
+The schema should define a list of module objects, each with a unique ID, title, and a list of objectives. The generation logic will take the output from the Markdown parser and write the `modules.json` file.
+
+## 4. Implement Initial `codetandem.state.json` Generation [pending]
+### Dependencies: 2.1, 2.3
+### Description: Design the JSON schema for the project state file and implement the logic to generate the initial `codetandem.state.json` upon project initialization.
+### Details:
+The initial state must reference the first module from `modules.json`, set the `current_module_id`, initialize a default `skill_score` for that module, and store the project file tree from the scanner.
+

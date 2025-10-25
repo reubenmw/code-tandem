@@ -1,0 +1,37 @@
+# Task ID: 9
+# Title: Implement Module Assessment (`codetandem test`)
+# Status: pending
+# Dependencies: 5, 6
+# Priority: medium
+# Description: Create the `codetandem test` command, which is triggered at the end of a module to generate and evaluate a 'capstone' task.
+# Details:
+When a module's tasks are completed, the tool should prompt the user to run `codetandem test`. This command will prompt the AI to generate a comprehensive task that combines skills from the completed module. The task will be presented without any `// TODO` scaffolding. The user will implement it and use `codetandem submit` to have it graded. A successful submission marks the module as complete in `codetandem.state.json` and unlocks the next one.
+
+# Test Strategy:
+Create a test state where a module is ready for assessment. Run `codetandem test` and mock the AI to ensure it's prompted to create a 'capstone' task. Simulate a user submission and test the pass/fail logic, verifying that the state file is updated correctly to mark the module as complete and advance the user to the next one.
+
+# Subtasks:
+## 1. Develop Logic to Detect Module Completion [pending]
+### Dependencies: None
+### Description: Implement the logic to check `codetandem.state.json` and determine if all tasks within the current module are completed, which should trigger a prompt for the user to run `codetandem test`.
+### Details:
+This logic should be integrated into the `codetandem submit` command's success path. After a task is successfully submitted, the system must check if it was the last remaining task for the current module. If so, it should print a message to the console advising the user to run `codetandem test` to proceed.
+
+## 2. Implement `codetandem test` Command for Capstone Task Generation [pending]
+### Dependencies: 9.1
+### Description: Create the `codetandem test` command. This command will use prompt engineering to request a comprehensive 'capstone' task from the AI, based on the skills learned in the just-completed module.
+### Details:
+The command will read the completed module's topics and learning objectives from `modules.json`. It will then construct a prompt for the AI asking for a single, unscaffolded coding challenge that integrates these topics. The generated task will be saved to a new file, e.g., `module_test.py`, and the state file will be updated to indicate an assessment is in progress.
+
+## 3. Adapt `codetandem submit` for Capstone Task Grading [pending]
+### Dependencies: 9.2
+### Description: Modify the existing `codetandem submit` command to differentiate between regular tasks and capstone assessment tasks, applying a specific grading rubric for the assessment.
+### Details:
+The `submit` command must check the state in `codetandem.state.json` to see if an assessment is in progress. If so, it will send the user's solution along with the original capstone prompt to the AI for a pass/fail evaluation, rather than the usual skill-building feedback.
+
+## 4. Implement State Transition on Successful Assessment [pending]
+### Dependencies: 9.3
+### Description: Upon a successful submission of a capstone task, update `codetandem.state.json` to mark the current module as complete and unlock the next module in the curriculum.
+### Details:
+After the `submit` command receives a 'pass' from the AI for a capstone task, it must modify `codetandem.state.json`. This includes adding the completed module ID to a 'completed_modules' list, clearing the 'assessment_pending' state, and setting the 'current_module' to the next one in the sequence from `modules.json`.
+
