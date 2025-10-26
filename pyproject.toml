@@ -29,4 +29,5 @@ codetandem = "codetandem.main:app"
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "pyinstaller>=5.0.0",
 ]
