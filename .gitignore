@@ -28,4 +28,13 @@ node_modules/
 *.egg-info
 __pycache__
 build
+
+# Build output
 dist
+
+# Test coverage
+coverage
+*.lcov
+
+# TypeScript
+*.tsbuildinfo

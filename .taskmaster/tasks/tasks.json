@@ -652,13 +652,430 @@
         "recommendedSubtasks": 4,
         "expansionPrompt": "Break down the task of packaging the application. Create subtasks for: 1. Setting up and configuring a packaging tool like PyInstaller to create a standalone executable. 2. Creating a GitHub Actions workflow to automate the build process. 3. Configuring separate build jobs within the workflow for Linux, Windows, and macOS. 4. Writing clear, cross-platform installation instructions for the README.",
         "updatedAt": "2025-10-25T23:25:30.451Z"
+      },
+      {
+        "id": "11",
+        "title": "Setup Node.js project structure and configuration",
+        "description": "Initialize package.json, configure TypeScript/ESM, setup build tooling (tsup/esbuild), configure ESLint and testing framework (Jest/Vitest)",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [],
+        "complexity": 4,
+        "recommendedSubtasks": 5,
+        "expansionPrompt": "Break down the process of setting up a modern TypeScript Node.js project. Create subtasks for initializing the project with `npm` or `yarn`, configuring the TypeScript compiler (`tsconfig.json`), setting up a build tool like `tsup` for bundling, integrating a linter and formatter like ESLint and Prettier, and configuring a test runner like Vitest or Jest.",
+        "updatedAt": "2025-12-09T05:04:24.340Z"
+      },
+      {
+        "id": "12",
+        "title": "Convert AI provider system to Node.js",
+        "description": "Port providers/base.py, providers/anthropic.py, providers/openai.py, providers/gemini.py, and providers/factory.py to TypeScript/JavaScript using official SDKs (@anthropic-ai/sdk, openai, @google/generative-ai)",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          "11"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "complexity": 7,
+        "recommendedSubtasks": 5,
+        "expansionPrompt": "Deconstruct the task of porting the AI provider system. Create a subtask to first define a common `AIProvider` abstract class or interface in TypeScript. Then, create separate subtasks to implement this for each service: OpenAI, Anthropic, and Gemini, using their official Node.js SDKs. Finally, add a subtask to create a provider factory to dynamically instantiate the correct provider based on configuration.",
+        "updatedAt": "2025-12-09T05:11:16.021Z"
+      },
+      {
+        "id": "13",
+        "title": "Convert core utilities to Node.js",
+        "description": "Port config.py, secrets.py, state.py modules to TypeScript/JavaScript. Replace keyring with a Node.js alternative (keytar or system keychain). Implement configuration management using cosmiconfig or similar",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "11"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "complexity": 6,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Break down the porting of core utility modules. Create a subtask for implementing application state management (reading/writing the state JSON file). Create another for handling configuration files using a library like `cosmiconfig`. Finally, create a subtask to research, select, and implement a Node.js library for secure credential storage (e.g., `keytar`), replacing the Python `keyring` functionality."
+      },
+      {
+        "id": "14",
+        "title": "Convert CLI commands system to Node.js",
+        "description": "Port all commands (init, config, solve, test, hint, next, submit, set_level) from Python/Typer to Node.js using Commander.js or similar CLI framework. Maintain same command structure and arguments",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "11",
+          "12",
+          "13"
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Port `init` command to Node.js/Commander.js",
+            "description": "Implement the `init` command using Commander.js. This command is responsible for initializing the project, setting up configuration files, and preparing the environment for the user by porting the existing Python logic to Node.js.",
+            "dependencies": [],
+            "details": "Define the 'init' command in the main CLI file using `program.command('init')`. Replicate any arguments or options from the original Typer implementation. The command's action handler should call the newly ported Node.js configuration and state management modules (from Task 13) to create initial configuration and state files.",
+            "status": "pending",
+            "testStrategy": "Unit test the command definition to ensure correct arguments and options are registered. Create an integration test that executes the command in a temporary directory and verifies that the expected configuration files are created with default content.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Port `config` command to Node.js/Commander.js",
+            "description": "Implement the `config` command for viewing and modifying user configuration. This includes porting the logic for getting, setting, and listing configuration values, leveraging the new Node.js configuration utility from Task 13.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create the 'config' command with subcommands for 'get', 'set', and 'list'. Use Commander.js features to handle these subcommands and their respective arguments. The implementation will interact directly with the configuration management system (e.g., cosmiconfig) ported in Task 13.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for each subcommand (`get`, `set`, `list`). Integration tests should set a configuration value via the CLI, then use the 'get' command to verify it was stored correctly, and finally use 'list' to see all values.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Port `next` command to Node.js/Commander.js",
+            "description": "Implement the `next` command to fetch and display the next problem from the curriculum. This involves porting the logic that interacts with the curriculum and state management modules ported in Tasks 18 and 13, respectively.",
+            "dependencies": [
+              1
+            ],
+            "details": "Define the 'next' command in Commander.js. The action handler will call the Node.js curriculum module to determine the next problem based on the user's current state (retrieved from the state management module). The problem description should be displayed to the console.",
+            "status": "pending",
+            "testStrategy": "Create an integration test with a mock state and curriculum data. Execute the `next` command and assert that the console output correctly displays the details of the expected next problem. Test the behavior when the user is at the end of the curriculum.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Port `test` command to Node.js/Commander.js",
+            "description": "Implement the `test` command to run local tests against the user's solution for the current problem. This involves porting the logic for finding the relevant tests and executing them using a Node.js test runner.",
+            "dependencies": [
+              3
+            ],
+            "details": "Define the 'test' command in Commander.js. The implementation will locate the test files for the current problem (using information from the curriculum and state modules) and execute them programmatically using a Node.js test runner like Jest or Vitest (as per Task 19).",
+            "status": "pending",
+            "testStrategy": "Mock the user state to simulate being on a specific problem. Create a dummy solution file and a corresponding test file. Run the `test` command and assert that the test runner is invoked correctly and that the test results are captured and displayed to the user.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Port `hint` command to Node.js/Commander.js",
+            "description": "Implement the `hint` command to provide a hint for the current problem. This requires porting the logic that interacts with the AI provider system (from Task 12) to generate helpful advice.",
+            "dependencies": [
+              3
+            ],
+            "details": "Define the 'hint' command in Commander.js. Its action handler will retrieve the current problem context from the state and curriculum modules, then formulate a request to the appropriate AI provider module (ported in Task 12) to generate a hint. The response will be displayed to the user.",
+            "status": "pending",
+            "testStrategy": "Mock the AI provider module to return a pre-defined hint. Set the user state to a specific problem. Execute the `hint` command and verify that the correct prompt data is sent to the mock AI provider and that the canned hint is displayed in the console.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 6,
+            "title": "Port `solve` command to Node.js/Commander.js",
+            "description": "Implement the `solve` command, which uses an AI provider to generate a complete solution for the current problem. Port the logic for interacting with the AI and saving the generated solution to a file.",
+            "dependencies": [
+              3
+            ],
+            "details": "Define the 'solve' command. The action handler will gather the problem context from the curriculum module, send it to the selected AI provider (from Task 12), and stream the generated solution back to the user, saving it into the appropriate solution file.",
+            "status": "pending",
+            "testStrategy": "Mock the AI provider module to return a pre-defined code solution. Run the `solve` command and verify that a solution file is created in the correct location with the expected content. Ensure file-writing operations are handled correctly.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 7,
+            "title": "Port `submit` command to Node.js/Commander.js",
+            "description": "Implement the `submit` command for submitting a user's solution to the current problem. Port the logic for reading the solution file, running validations, and updating the user's progress in the state file.",
+            "dependencies": [
+              4
+            ],
+            "details": "Define the 'submit' command in Commander.js, which should accept an optional file path argument. The command's logic will read the solution, use the ported curriculum module to get the problem's validation logic, execute it, and update the user's state via the state management module (from Task 13).",
+            "status": "pending",
+            "testStrategy": "Create tests that mock the file system and user state. Test submitting a correct solution and verify that the user's progress is updated correctly in the mock state. Test submitting an incorrect solution and verify that appropriate feedback is given and the state remains unchanged.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 8,
+        "recommendedSubtasks": 7,
+        "expansionPrompt": "Decompose the migration of the CLI from Python/Typer to Node.js/Commander.js. Create a subtask for each primary command: `init`, `config`, `next`, `submit`, `test`, `hint`, and `solve`. Each subtask should focus on defining the command, its arguments, and its options in Commander.js and porting the associated business logic by calling the newly created Node.js modules."
+      },
+      {
+        "id": "15",
+        "title": "Convert code analysis modules to Node.js",
+        "description": "Port code_parser.py, linter.py, scanner.py to TypeScript/JavaScript. Use appropriate Node.js parsing libraries (babel/parser, @typescript-eslint/parser, or tree-sitter) for code analysis",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "11"
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Research and Select JavaScript/TypeScript AST Parsing Library",
+            "description": "Evaluate and choose a suitable Node.js library for parsing source code into an Abstract Syntax Tree (AST). Candidates include Babel Parser, Acorn, and tree-sitter. The decision should be documented with a clear rationale based on performance, ecosystem, and ease of use.",
+            "dependencies": [],
+            "details": "Create a markdown document comparing at least three parsing libraries. The analysis should cover API design, performance benchmarks, and compatibility with language extensions. The final choice will dictate the implementation for the subsequent porting tasks.",
+            "status": "pending",
+            "testStrategy": "The outcome is a decision document. The 'test' is a peer review of the research to ensure the chosen library meets the project's technical requirements and constraints.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Port `code_parser.py` to TypeScript for AST Generation",
+            "description": "Re-implement the functionality of `code_parser.py` in TypeScript. This new module will be responsible for taking a string of source code and using the selected AST library to generate a complete and accurate Abstract Syntax Tree.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a new module, e.g., `code-parser.ts`, that exposes a function to parse code. This function should accept a code string and return an AST object conforming to the chosen library's specification. Implement robust error handling for syntax errors.",
+            "status": "pending",
+            "testStrategy": "Develop unit tests using Jest or Vitest. Feed the parser various code snippets (including edge cases and invalid code) and assert that the generated AST structure is correct or that appropriate errors are thrown.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Port `linter.py` to TypeScript for AST Analysis",
+            "description": "Convert the AST analysis logic from `linter.py` into a new TypeScript module. This linter will traverse the AST generated by the new code parser to identify specific patterns, rule violations, or code quality issues.",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement a `Linter` class or set of functions that operate on the AST. Use the visitor pattern or equivalent traversal method provided by the chosen AST library to inspect nodes and apply linting rules. The logic should mirror the original Python implementation.",
+            "status": "pending",
+            "testStrategy": "Write tests for each linting rule. For each test, provide a code snippet that should trigger a specific linting error and assert that the linter correctly identifies and reports it. Compare output against the original `linter.py` for a set of sample files.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Port `scanner.py` to TypeScript for Information Extraction",
+            "description": "Re-implement the `scanner.py` module in TypeScript to extract specific information from the source code by traversing the AST. This includes identifying function definitions, class structures, imports, and other key code elements.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create a `scanner.ts` module that traverses the AST to collect desired information. The output should be a structured data format (e.g., an array of objects) that represents the scanned elements, which can be easily consumed by other parts of the application.",
+            "status": "pending",
+            "testStrategy": "Create unit tests that pass sample source code to the scanner. Assert that the extracted information (e.g., function names, parameter counts, class inheritance) is accurate and matches the expected output derived from manual inspection and the original Python scanner.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 9,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Break down the complex task of porting code analysis features. Create a subtask to research and select a suitable JavaScript/TypeScript AST parsing library (e.g., Babel, Acorn, tree-sitter). Then, create separate subtasks to port the functionality of `code_parser.py` (generating the AST), `linter.py` (analyzing the AST), and `scanner.py` (extracting information) using the chosen library's API."
+      },
+      {
+        "id": "16",
+        "title": "Convert vector store and documentation system to Node.js",
+        "description": "Port vector_store.py and docs_ingestion.py to TypeScript/JavaScript. Replace sentence-transformers and chromadb with Node.js alternatives (e.g., @xenova/transformers, chromadb-client, or hnswlib-node)",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "11"
+        ],
+        "priority": "medium",
+        "subtasks": [],
+        "complexity": 7,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Deconstruct the porting of the vector store and ingestion system. Create a subtask to implement the documentation ingestion pipeline. Create a second subtask to integrate a Node.js library like `@xenova/transformers.js` for generating text embeddings. Create a third subtask to set up and interact with a vector database using a client like `chromadb-client`. Finally, create a subtask to tie these components together by porting the main `vector_store.py` logic."
+      },
+      {
+        "id": "17",
+        "title": "Enhance Task Master integration for Node.js",
+        "description": "Port taskmaster_integration.py to TypeScript/JavaScript and enhance it to use Task Master AI's native Node.js APIs. Implement deep integration features like direct task manipulation, workflow automation, and event hooks",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "11",
+          "13",
+          "14"
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Port `taskmaster_integration.py` to TypeScript",
+            "description": "Translate the existing Python-based Task Master integration logic into a functional TypeScript module. This initial port will replicate the current functionality, establishing a baseline for future enhancements with the native Node.js API.",
+            "dependencies": [],
+            "details": "Create a new `taskmasterIntegration.ts` file. Systematically translate the classes, methods, and API call structures from the Python script. Ensure all environment variable handling and configuration is adapted for the Node.js environment.",
+            "status": "pending",
+            "testStrategy": "Write unit tests using Jest to verify that the ported TypeScript functions produce the same outputs as their Python counterparts for a given set of inputs. Mock the Task Master API endpoints to isolate and validate the translation logic.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement Direct Task Manipulation via Native Node.js API",
+            "description": "Enhance the ported TypeScript integration to utilize the official Task Master Node.js API for direct task manipulation. This includes implementing functions for creating, reading, updating, and deleting tasks and their properties.",
+            "dependencies": [
+              1
+            ],
+            "details": "Install the official Task Master Node.js SDK. Refactor the ported code to replace generic HTTP requests with the native SDK functions (e.g., `taskmaster.tasks.create()`, `taskmaster.tasks.update()`). Authenticate using the recommended SDK methods.",
+            "status": "pending",
+            "testStrategy": "Develop integration tests that connect to a development instance of Task Master. The tests will create a task, verify its properties via a read operation, update it, and finally delete it, asserting the state at each step of the CRUD lifecycle.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Develop Workflow Automation Functions",
+            "description": "Leverage the native Node.js API to build higher-level functions that automate common project management workflows, such as automatically transitioning task statuses or creating a sequence of tasks from a predefined template.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Identify 2-3 key workflows, like 'On code commit, move linked task to In Progress'. Implement these as exported functions in the integration module. These functions will orchestrate multiple task manipulation calls to execute the workflow logic.",
+            "status": "pending",
+            "testStrategy": "Create end-to-end tests for each automated workflow. For example, simulate a trigger event (e.g., a mock git hook payload) and verify that the corresponding task in the test Task Master instance is updated to the correct status and assigned to the right user.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Integrate Event Handling with API Hooks",
+            "description": "Implement a mechanism to subscribe to and handle real-time events from Task Master using its native webhook or event stream capabilities. This will enable the application to react instantly to changes like task completion or new comments.",
+            "dependencies": [
+              1
+            ],
+            "details": "Set up a dedicated endpoint within the Node.js application to receive webhook payloads from Task Master. Implement a dispatcher to parse incoming events (e.g., `task.updated`, `comment.created`) and route them to appropriate handler functions.",
+            "status": "pending",
+            "testStrategy": "Use a tool like ngrok to expose the local webhook receiver endpoint during testing. Manually trigger various events in the Task Master UI (e.g., add a comment, change a task status) and assert that the Node.js application receives and correctly processes the corresponding webhook payloads.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 8,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Break down the integration with Task Master AI. First, create a subtask to port the existing integration logic from Python to TypeScript. Then, create subtasks to explore and implement the advanced features of the native Node.js API, such as one for direct task manipulation, another for automating workflows, and a final one for subscribing to and handling events via hooks."
+      },
+      {
+        "id": "18",
+        "title": "Convert remaining modules to Node.js",
+        "description": "Port tandem.py, curriculum.py, review.py, modules.py to TypeScript/JavaScript. Ensure all business logic and features are preserved",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "11",
+          "12",
+          "13"
+        ],
+        "priority": "medium",
+        "subtasks": [],
+        "complexity": 7,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Create a subtask for each of the remaining core logic modules that need to be ported to TypeScript. This includes one subtask for `curriculum.py` (parsing and managing curriculum structure), one for `modules.py` (handling module data), one for `review.py` (logic for code review), and one for `tandem.py` (core tandem programming session logic)."
+      },
+      {
+        "id": "19",
+        "title": "Convert test suite to Node.js",
+        "description": "Port all tests from pytest to Jest or Vitest. Ensure test coverage is maintained and all functionality is validated in the Node.js version",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18"
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Port CLI Command Tests from Pytest to Vitest/Jest",
+            "description": "Migrate all tests related to the CLI commands (e.g., init, config, solve) from the Python pytest suite to a Node.js-based framework like Vitest or Jest. Ensure argument parsing, command execution, and outputs are thoroughly tested.",
+            "dependencies": [],
+            "details": "Use a library like 'execa' to test command execution and outputs by running the CLI as a subprocess. Replicate pytest fixtures for setting up test environments and file systems using 'memfs' or temporary directories.",
+            "status": "pending",
+            "testStrategy": "Mock subprocesses and file system interactions to validate command behavior, argument parsing, and output correctness for each CLI command. Use snapshot testing for complex outputs.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Port AI Provider Tests from Pytest to Vitest/Jest",
+            "description": "Convert all tests for AI provider interactions (OpenAI, Anthropic, Gemini) to the new Node.js test suite. This includes tests for API request/response handling, error cases, and the provider factory logic.",
+            "dependencies": [],
+            "details": "Utilize 'msw' (Mock Service Worker) or Vitest's built-in mocking capabilities to intercept and mock API calls to AI provider SDKs. Ensure tests cover authentication, data shaping, and various API error responses.",
+            "status": "pending",
+            "testStrategy": "Use API mocking to simulate responses from AI provider SDKs. Verify that the correct requests are constructed and that the application correctly handles both successful responses and various error conditions like rate limits or invalid keys.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Port Core Utility Tests from Pytest to Vitest/Jest",
+            "description": "Migrate tests for core utilities, including configuration management (e.g., cosmiconfig), secrets handling (e.g., keytar), and application state management. This is critical for ensuring the application's foundation is stable.",
+            "dependencies": [],
+            "details": "Focus on mocking file system access for configuration files and any native keychain/keystar interactions for secrets management. Recreate pytest fixtures that provide different configurations and states for testing various scenarios.",
+            "status": "pending",
+            "testStrategy": "Mock external dependencies like `keytar` and file system access (`fs/promises`). Test configuration loading from various sources (e.g., package.json, .config.js) and ensure secret management functions behave as expected across different platforms.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Port Code Analysis and Evaluation Logic Tests to Vitest/Jest",
+            "description": "Convert tests for code analysis, syntax validation, and automated evaluation logic. This includes migrating tests that validate Abstract Syntax Tree (AST) parsing, vulnerability checks, or other static analysis features.",
+            "dependencies": [],
+            "details": "These tests will involve providing sample code snippets as input and asserting the correctness of the analysis output. Mocks may be needed for filesystem access or any external rule-fetching dependencies.",
+            "status": "pending",
+            "testStrategy": "Use snapshot testing for complex output objects from the code analysis engine. Test with a variety of valid and invalid code snippets to ensure the analysis and evaluation logic is robust and handles edge cases correctly.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Port Vector Store and Memory Management Tests to Vitest/Jest",
+            "description": "Migrate all tests related to the vector store, memory creation, and data management functionalities. This covers embedding generation, storage, retrieval, and deletion of memories.",
+            "dependencies": [],
+            "details": "Adapt Python tests that mock database connections or in-memory stores. The Node.js tests should validate the logic against a mocked or in-memory version of the vector database to ensure data integrity and search correctness.",
+            "status": "pending",
+            "testStrategy": "Test the vector store component against an in-memory or mocked database interface (e.g., an in-memory SQLite for a SQL-based vector store). Validate CRUD operations, similarity searches, and metadata filtering.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 6,
+            "title": "Finalize Test Suite and Ensure Code Coverage",
+            "description": "After porting all feature-specific tests, conduct a full review of the new Node.js test suite. Configure and run coverage reports, identify any gaps, and add missing tests to meet or exceed the coverage levels of the original pytest suite.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "details": "Configure Vitest/Jest to generate coverage reports in LCOV and HTML formats. Analyze the report to find untested code paths, branches, and functions. Prioritize writing new tests for critical logic that is currently untested.",
+            "status": "pending",
+            "testStrategy": "Run the full test suite with coverage enabled. Compare the generated report against a baseline report from the Python test suite. Address any significant regressions in coverage by writing targeted unit and integration tests.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 8,
+        "recommendedSubtasks": 6,
+        "expansionPrompt": "Structure the test suite migration from `pytest` to `Vitest`/`Jest`. Create subtasks based on application features: one for CLI command tests, one for AI provider tests, one for core utility tests, one for code analysis tests, one for the vector store, and a final one for ensuring test coverage goals are met across the new suite."
+      },
+      {
+        "id": "20",
+        "title": "Setup Node.js build and distribution",
+        "description": "Configure executable generation using pkg or ncc. Update GitHub Actions workflows to build Node.js executables for Windows, macOS, and Linux. Update documentation and installation instructions",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          "19"
+        ],
+        "priority": "medium",
+        "subtasks": [],
+        "complexity": 7,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Break down the process of packaging the Node.js application. Create a subtask to research and select a packaging tool (`pkg`, `ncc`, etc.) and create the build configuration. Create another subtask to update the GitHub Actions CI/CD pipeline for cross-platform builds. Add a subtask for testing the generated executables on clean Windows, macOS, and Linux environments. Finally, a subtask to update all user documentation with the new installation instructions."
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-10-25T23:25:30.452Z",
-      "taskCount": 10,
-      "completedCount": 10,
+      "lastModified": "2025-12-09T05:11:16.021Z",
+      "taskCount": 20,
+      "completedCount": 12,
       "tags": [
         "master"
       ]

@@ -1,8 +1,8 @@
 {
 	"meta": {
-		"generatedAt": "2025-10-25T20:11:59.598Z",
+		"generatedAt": "2025-12-09T04:52:23.148Z",
 		"tasksAnalyzed": 10,
-		"totalTasks": 10,
+		"totalTasks": 20,
 		"analysisCount": 10,
 		"thresholdScore": 5,
 		"projectName": "Taskmaster",
@@ -10,84 +10,84 @@
 	},
 	"complexityAnalysis": [
 		{
-			"taskId": 1,
-			"taskTitle": "Setup CLI Framework and Configuration Management",
+			"taskId": 11,
+			"taskTitle": "Setup Node.js project structure and configuration",
 			"complexityScore": 4,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "Break down the task of setting up the CLI and configuration management. Create subtasks for: 1. Initializing the project with a chosen CLI framework (e.g., Typer). 2. Designing and implementing the configuration module to handle settings like provider and model. 3. Implementing the secure storage and retrieval of API keys using a cross-platform solution like the system keychain. 4. Adding the `codetandem config` command with its subcommands (`set`, `get`, etc.) to the CLI.",
-			"reasoning": "This is a foundational task with moderate complexity. While setting up a CLI framework is straightforward, implementing secure, cross-platform storage for API keys (e.g., using a system keychain) introduces non-trivial challenges and dependencies. The design of the configuration module also needs to be extensible for future providers."
-		},
-		{
-			"taskId": 2,
-			"taskTitle": "Implement Core Project Initialization (`codetandem init`)",
-			"complexityScore": 5,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "Break down the `codetandem init` command implementation. Create subtasks for: 1. Developing a module to recursively scan a project directory and represent it as a file tree. 2. Creating a robust parser for the Markdown curriculum file to extract modules and objectives. 3. Designing the schema and implementing the generation logic for `modules.json`. 4. Designing the schema and implementing the generation logic for the initial `codetandem.state.json`.",
-			"reasoning": "This task involves multiple distinct components: file system traversal, Markdown parsing, and structured data generation. Each of these has its own edge cases. Ensuring the Markdown parser is robust and that the generated state files are correctly structured based on two different inputs (file tree and curriculum) makes this moderately complex."
-		},
-		{
-			"taskId": 3,
-			"taskTitle": "Build Abstract AI Provider Service Layer",
-			"complexityScore": 6,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "Break down the creation of the AI provider service layer. Create subtasks for: 1. Designing a common `BaseAIProvider` interface with methods like `generate_code_suggestion` and `review_code`. 2. Implementing a concrete provider class for a specific service (e.g., `OpenAIProvider`) that handles its API requests and responses. 3. Implementing a second concrete provider class (e.g., `GeminiProvider`). 4. Creating a factory function that reads the application configuration and returns an instance of the correct provider.",
-			"reasoning": "The core challenge here is architectural. Designing a flexible, model-agnostic abstraction that can accommodate the nuances of different LLM provider APIs is a significant task. While implementing a single provider is straightforward, creating a robust layer for multiple providers, along with the necessary testing mocks, increases the complexity."
-		},
-		{
-			"taskId": 4,
-			"taskTitle": "Implement Core Tandem Coding Loop (`codetandem next`)",
-			"complexityScore": 8,
 			"recommendedSubtasks": 5,
-			"expansionPrompt": "Break down the implementation of the core `codetandem next` command. Create subtasks for: 1. Reading the current project state and learning objective. 2. Implementing the prompt engineering logic to construct a comprehensive context for the AI. 3. Calling the AI service and handling the response. 4. Developing a robust parser to extract the target file and code changes from the AI's response. 5. Implementing the logic to safely apply the code modifications to the user's file system and insert the `// TODO` comment.",
-			"reasoning": "This is the core feature and is highly complex. It orchestrates state management, complex prompt engineering, interaction with an external AI service, and direct, potentially risky, file system manipulation. Reliably parsing the AI's response and applying code changes correctly is a major technical challenge."
+			"expansionPrompt": "Break down the process of setting up a modern TypeScript Node.js project. Create subtasks for initializing the project with `npm` or `yarn`, configuring the TypeScript compiler (`tsconfig.json`), setting up a build tool like `tsup` for bundling, integrating a linter and formatter like ESLint and Prettier, and configuring a test runner like Vitest or Jest.",
+			"reasoning": "This is a foundational task that involves configuring multiple tools to work together (TypeScript, ESM, build tools, linter, test framework). While it doesn't involve complex business logic, getting the configuration right is crucial for the entire project and requires familiarity with the modern Node.js ecosystem. The complexity is moderate as it's more than a simple `npm init`."
 		},
 		{
-			"taskId": 5,
-			"taskTitle": "Implement Interactive Code Review (`codetandem submit`)",
-			"complexityScore": 8,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Break down the `codetandem submit` command. Create subtasks for: 1. Developing a parser to find the relevant `// TODO` and extract the user's code changes. 2. Integrating a static analysis/linter tool and running it on the extracted code. 3. Implementing the prompt engineering logic to request a code review from the AI service. 4. Parsing the AI's feedback and determining if the submission was successful. 5. Updating the skill score and progress in `codetandem.state.json`.",
-			"reasoning": "This task is as complex as the `next` command. It involves several challenging steps: reliably extracting user-written code, integrating and managing external linter processes, crafting effective prompts for code review (which is different from code generation), and parsing structured feedback from the AI to update user state."
-		},
-		{
-			"taskId": 6,
-			"taskTitle": "Implement Dynamic Scaffolding and Skill Scoring",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down the implementation of dynamic scaffolding. Create subtasks for: 1. Modifying the `codetandem.state.json` schema and updating the `submit` command to increment a module's skill score upon success. 2. Enhancing the `next` command to read the current skill score before generating a task. 3. Implementing the conditional prompt logic within the `next` command to request different levels of detail from the AI based on the user's skill score.",
-			"reasoning": "While this task modifies existing complex commands, the changes are localized. The primary complexity lies in designing and tuning the prompt engineering logic to effectively translate a numerical skill score into meaningful variations in AI-generated tasks. This requires significant experimentation and refinement."
-		},
-		{
-			"taskId": 7,
-			"taskTitle": "Implement User Control Commands (`hint`, `solve`, `set_level`)",
-			"complexityScore": 6,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down the implementation of user control commands. Create subtasks for: 1. Building the `hint` command, which queries the AI for help on the current task. 2. Building the `solve` command, which uses the AI to complete the task and updates the state file. 3. Building the `set_level` command to manually override the difficulty and ensuring the `next` command respects this setting.",
-			"reasoning": "This task involves creating three distinct commands that interact with the core application state and AI service. The `hint` command requires logic for progressive disclosure, and the `solve` command reuses complex code-writing logic. The combined effort of implementing, testing, and integrating these three separate user flows justifies the complexity score."
-		},
-		{
-			"taskId": 8,
-			"taskTitle": "Enhance `init` with Documentation Ingestion and Taskmaster Integration",
+			"taskId": 12,
+			"taskTitle": "Convert AI provider system to Node.js",
 			"complexityScore": 7,
 			"recommendedSubtasks": 5,
-			"expansionPrompt": "Break down the enhancement of the `init` command. Create subtasks for: 1. Implementing the documentation ingestion pipeline using the `--docs` flag, including scraping, chunking, and embedding. 2. Integrating a local vector database to store and query the ingested documentation. 3. Implementing the Taskmaster `prd.md` and `tasks.json` parsers. 4. Developing the logic to create the Curriculum-Backlog Map and integrate it into `modules.json`. 5. Adding the new optional flags and logic to the existing `init` command.",
-			"reasoning": "This task introduces several technologically complex components into an existing command. Web scraping, text chunking, vector embeddings, and managing a local vector store are all non-trivial. This significantly expands the scope and dependencies of the `init` command, making it a high-complexity task."
+			"expansionPrompt": "Deconstruct the task of porting the AI provider system. Create a subtask to first define a common `AIProvider` abstract class or interface in TypeScript. Then, create separate subtasks to implement this for each service: OpenAI, Anthropic, and Gemini, using their official Node.js SDKs. Finally, add a subtask to create a provider factory to dynamically instantiate the correct provider based on configuration.",
+			"reasoning": "This task involves porting core business logic that interacts with multiple external APIs. It requires adapting Python patterns to asynchronous, promise-based TypeScript code and learning the specific APIs of three different official SDKs. Handling API errors, request/response types, and the factory pattern adds significant complexity."
 		},
 		{
-			"taskId": 9,
-			"taskTitle": "Implement Module Assessment (`codetandem test`)",
-			"complexityScore": 5,
+			"taskId": 13,
+			"taskTitle": "Convert core utilities to Node.js",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down the porting of core utility modules. Create a subtask for implementing application state management (reading/writing the state JSON file). Create another for handling configuration files using a library like `cosmiconfig`. Finally, create a subtask to research, select, and implement a Node.js library for secure credential storage (e.g., `keytar`), replacing the Python `keyring` functionality.",
+			"reasoning": "This task's complexity comes from replacing Python-specific libraries with suitable Node.js equivalents. While porting state management (file I/O) is straightforward, finding, evaluating, and integrating new libraries for configuration (`cosmiconfig`) and especially secure secrets (`keytar`) is more challenging. `keytar` can introduce native dependency complexities."
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Convert CLI commands system to Node.js",
+			"complexityScore": 8,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Decompose the migration of the CLI from Python/Typer to Node.js/Commander.js. Create a subtask for each primary command: `init`, `config`, `next`, `submit`, `test`, `hint`, and `solve`. Each subtask should focus on defining the command, its arguments, and its options in Commander.js and porting the associated business logic by calling the newly created Node.js modules.",
+			"reasoning": "While the logic for any single command may be simple, this task is complex due to its sheer breadth, as it touches every user-facing feature of the application. It requires translating the entire command structure and has heavy dependencies on almost all other ported modules. The volume of work and the need to orchestrate the full application logic through the CLI make this a high-complexity task."
+		},
+		{
+			"taskId": 15,
+			"taskTitle": "Convert code analysis modules to Node.js",
+			"complexityScore": 9,
 			"recommendedSubtasks": 4,
-			"expansionPrompt": "Break down the implementation of the `codetandem test` command. Create subtasks for: 1. Developing the logic to determine when a module is complete and ready for assessment. 2. Implementing the prompt engineering to have the AI generate a suitable 'capstone' task for the module. 3. Modifying the `submit` command to handle the grading of these assessment tasks. 4. Implementing the state transition logic to mark a module as complete and unlock the next one upon a successful test.",
-			"reasoning": "This task introduces a new, important workflow into the application. While it leverages existing components like the `submit` command, the complexity comes from managing the application's state transitions (e.g., moving from learning mode to assessment mode) and the specific prompt engineering required to generate a meaningful 'capstone' task from the AI."
+			"expansionPrompt": "Break down the complex task of porting code analysis features. Create a subtask to research and select a suitable JavaScript/TypeScript AST parsing library (e.g., Babel, Acorn, tree-sitter). Then, create separate subtasks to port the functionality of `code_parser.py` (generating the AST), `linter.py` (analyzing the AST), and `scanner.py` (extracting information) using the chosen library's API.",
+			"reasoning": "This is one of the most technically challenging tasks. It's not a direct translation but a re-implementation of logic based on a new Abstract Syntax Tree (AST) structure provided by a different library. It requires specialized knowledge of code parsing and AST manipulation, and the chosen tools (like tree-sitter) can have their own complexities, including native bindings."
 		},
 		{
-			"taskId": 10,
-			"taskTitle": "Package for Cross-Platform Distribution",
+			"taskId": 16,
+			"taskTitle": "Convert vector store and documentation system to Node.js",
 			"complexityScore": 7,
 			"recommendedSubtasks": 4,
-			"expansionPrompt": "Break down the task of packaging the application. Create subtasks for: 1. Setting up and configuring a packaging tool like PyInstaller to create a standalone executable. 2. Creating a GitHub Actions workflow to automate the build process. 3. Configuring separate build jobs within the workflow for Linux, Windows, and macOS. 4. Writing clear, cross-platform installation instructions for the README.",
-			"reasoning": "This is a DevOps-heavy task with high complexity. While it doesn't involve application logic, setting up, debugging, and maintaining a CI/CD pipeline that builds and packages a non-trivial application for three different operating systems (Windows, macOS, Linux) is a significant challenge. Each platform has its own quirks and dependencies that must be managed."
+			"expansionPrompt": "Deconstruct the porting of the vector store and ingestion system. Create a subtask to implement the documentation ingestion pipeline. Create a second subtask to integrate a Node.js library like `@xenova/transformers.js` for generating text embeddings. Create a third subtask to set up and interact with a vector database using a client like `chromadb-client`. Finally, create a subtask to tie these components together by porting the main `vector_store.py` logic.",
+			"reasoning": "This task involves ML/NLP concepts and integrating multiple new libraries in the Node.js ecosystem. Replacing Python's mature data science stack (sentence-transformers, chromadb) requires careful selection and integration of JS alternatives. Potential performance and memory considerations of running transformer models within a Node.js process add to the complexity."
+		},
+		{
+			"taskId": 17,
+			"taskTitle": "Enhance Task Master integration for Node.js",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down the integration with Task Master AI. First, create a subtask to port the existing integration logic from Python to TypeScript. Then, create subtasks to explore and implement the advanced features of the native Node.js API, such as one for direct task manipulation, another for automating workflows, and a final one for subscribing to and handling events via hooks.",
+			"reasoning": "The complexity is high because this task goes beyond a simple port. The 'enhance' and 'deep integration' requirements imply new feature development and learning a potentially more complex, native Node.js API. This involves not just translation but also architectural design for new functionalities like workflow automation and event handling."
+		},
+		{
+			"taskId": 18,
+			"taskTitle": "Convert remaining modules to Node.js",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Create a subtask for each of the remaining core logic modules that need to be ported to TypeScript. This includes one subtask for `curriculum.py` (parsing and managing curriculum structure), one for `modules.py` (handling module data), one for `review.py` (logic for code review), and one for `tandem.py` (core tandem programming session logic).",
+			"reasoning": "This task is a catch-all for porting the application's core business logic. While it may not involve integrating many new external libraries, the complexity lies in accurately translating the application's fundamental rules and data structures, which are likely intricate and highly interconnected. Preserving all features and behaviors requires careful, detailed work."
+		},
+		{
+			"taskId": 19,
+			"taskTitle": "Convert test suite to Node.js",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Structure the test suite migration from `pytest` to `Vitest`/`Jest`. Create subtasks based on application features: one for CLI command tests, one for AI provider tests, one for core utility tests, one for code analysis tests, one for the vector store, and a final one for ensuring test coverage goals are met across the new suite.",
+			"reasoning": "This is a large, high-effort task that depends on the completion of all other feature ports. The complexity lies not in a simple translation, but in mapping `pytest` concepts (fixtures, extensive mocking) to a new testing ecosystem (`Jest`/`Vitest`). The sheer volume of tests and the requirement to maintain test coverage make this a substantial and critical undertaking."
+		},
+		{
+			"taskId": 20,
+			"taskTitle": "Setup Node.js build and distribution",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down the process of packaging the Node.js application. Create a subtask to research and select a packaging tool (`pkg`, `ncc`, etc.) and create the build configuration. Create another subtask to update the GitHub Actions CI/CD pipeline for cross-platform builds. Add a subtask for testing the generated executables on clean Windows, macOS, and Linux environments. Finally, a subtask to update all user documentation with the new installation instructions.",
+			"reasoning": "This task has significant hidden complexity. Packaging a Node.js application into a standalone executable, especially cross-platform, can be difficult. Challenges often arise with bundling native modules (like `keytar`) or dynamic `require()` statements. Configuring and debugging the CI/CD pipeline for three different operating systems adds another layer of complexity."
 		}
 	]
 }
