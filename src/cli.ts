@@ -23,6 +23,7 @@ import {
   solveCommand,
   submitCommand,
   setLevelCommand,
+  setupCommand,
 } from './commands/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -53,6 +54,7 @@ program.addCommand(hintCommand);
 program.addCommand(solveCommand);
 program.addCommand(submitCommand);
 program.addCommand(setLevelCommand);
+program.addCommand(setupCommand);
 
 // Info command for testing
 program

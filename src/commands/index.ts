@@ -8,6 +8,7 @@ export { generateCurriculumCommand } from './generate-curriculum.js';
 export { settingsCommand } from './settings.js';
 export { startCommand } from './start.js';
 export { reviewCommand } from './review.js';
+export { setupCommand } from './setup.js';
 
 // Import utilities
 import { Command } from 'commander';

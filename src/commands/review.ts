@@ -8,6 +8,7 @@ import { join } from 'path';
 import chalk from 'chalk';
 import { getAIProvider } from '../providers/factory.js';
 import { ConfigManager } from '../utils/config.js';
+import { getApiKey } from '../utils/secrets.js';
 import {
   loadState,
   updateState,
@@ -62,7 +63,7 @@ export const reviewCommand = new Command('review')
       const config = new ConfigManager();
       const provider = await config.getProvider();
       const model = await config.getModel();
-      const apiKey = await config.getApiKey(provider);
+      const apiKey = await getApiKey(provider);
 
       if (!apiKey) {
         console.error(chalk.red('❌ Error: No API key configured'));

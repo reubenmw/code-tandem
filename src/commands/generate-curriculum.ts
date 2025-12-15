@@ -7,6 +7,7 @@ import { readFile, writeFile } from 'fs/promises';
 import chalk from 'chalk';
 import { getAIProvider } from '../providers/factory.js';
 import { ConfigManager } from '../utils/config.js';
+import { getApiKey } from '../utils/secrets.js';
 import { generateModulesJson } from '../utils/modules.js';
 import { generateInitialState } from '../utils/state.js';
 
@@ -28,7 +29,7 @@ export const generateCurriculumCommand = new Command('generate-curriculum')
       const config = new ConfigManager();
       const provider = await config.getProvider();
       const model = await config.getModel();
-      const apiKey = await config.getApiKey(provider);
+      const apiKey = await getApiKey(provider);
 
       if (!apiKey) {
         console.error(chalk.red('❌ Error: No API key configured'));

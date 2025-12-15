@@ -85,53 +85,66 @@ The CLI is available for manual interaction and curriculum generation:
 
 ## Quick Start
 
-### 1. Configure your AI provider
+### 1. Initialize a Project
 
 ```bash
-# Set your preferred AI provider
-codetandem config set provider openai
+# Navigate to your project directory
+cd ~/my-learning-project
 
-# Set your API key (stored securely in system keychain)
-codetandem config set api_key YOUR_API_KEY
+# Initialize CodeTandem
+codetandem init
 
-# Set the model (optional)
-codetandem config set model gpt-4
+# This creates:
+# - .codetandem/ directory
+# - .codetandem/lrd.md (Learning Requirements Document)
+# - .codetandem/settings.json (Learning preferences)
 ```
 
-Supported providers:
-- `openai` - OpenAI GPT models
-- `anthropic` - Anthropic Claude models
-- `gemini` - Google Gemini models
+### 2. Create Your Learning Requirements
 
-### 2. Initialize a project
+Edit `.codetandem/lrd.md` with your learning goals in natural language:
 
-```bash
-# In your project directory
-codetandem init --project . --curriculum curriculum.md
+```markdown
+# React Counter App
+
+I want to learn how to build a simple React counter application.
+
+## What I want to learn:
+- Setting up React component state with useState
+- Handling button click events
+- Updating state based on user interactions
 ```
 
-This creates:
-- `modules.json` - Structured learning modules from your curriculum
-- `codetandem.state.json` - Your progress tracking
-
-### 3. Start learning
+### 3. Generate Curriculum
 
 ```bash
-# Get the next task
-codetandem next
+# Generate structured curriculum from your LRD
+codetandem generate
 
-# Get a hint for the current task
+# This creates:
+# - modules.json - Structured learning modules
+# - codetandem.state.json - Progress tracking
+```
+
+### 4. Start Learning (CLI or MCP)
+
+**Using CLI:**
+```bash
+# Check current status
+codetandem status
+
+# Get a hint for the current objective
 codetandem hint
 
-# Have AI solve the current task
-codetandem solve
+# Review your code (PRIMARY command)
+codetandem review src/Counter.tsx
 
-# Submit your solution for review
-codetandem submit
-
-# Take a module assessment
-codetandem test
+# Get AI solution (with penalty)
+codetandem solve --confirm
 ```
+
+**Using MCP (Recommended):**
+Open Zed/Claude and use the Assistant with CodeTandem MCP tools.
 
 ## Commands
 
@@ -146,22 +159,21 @@ codetandem config show                  # Show all configuration
 ### Project Management
 
 ```bash
-codetandem init [options]               # Initialize a new project
-  --project <path>                      # Project directory path
-  --curriculum <path>                   # Curriculum markdown file
-  --docs <path>                         # Documentation to ingest (optional)
-  --taskmaster <path>                   # Task Master integration (optional)
+codetandem init                         # Initialize a new project
+codetandem generate                     # Generate curriculum from LRD
+codetandem status                       # Show current progress
+codetandem list                         # List all modules
+codetandem info                         # Display project information
 ```
 
 ### Learning Flow
 
 ```bash
-codetandem next                         # Get the next learning task
-codetandem hint                         # Get a hint for current task
-codetandem solve                        # Have AI solve the current task
-codetandem submit                       # Submit your solution for review
-codetandem test                         # Take a module assessment
-codetandem set-level <level>            # Set difficulty level (easy/medium/hard)
+codetandem review <file>                # Review code with AI (PRIMARY)
+codetandem hint [file]                  # Get a hint (-0.5 penalty)
+codetandem solve [file] --confirm       # Get AI solution (-1.5 penalty)
+codetandem settings                     # View/modify preferences
+codetandem set-level <level>            # Set difficulty level
 ```
 
 ## Learning System
@@ -249,10 +261,16 @@ Run `codetandem generate` to convert to structured curriculum.
 
 ### Complete Guides
 
-- **[MCP_USAGE_GUIDE.md](./MCP_USAGE_GUIDE.md)** - Complete MCP server documentation and usage guide (PRIMARY INTERFACE)
+- **[MCP_USAGE_GUIDE.md](./MCP_USAGE_GUIDE.md)** - Complete MCP server documentation (PRIMARY INTERFACE for AI agents)
+- **[CLI_REFERENCE.md](./CLI_REFERENCE.md)** - Complete CLI command reference
 - **[PROFICIENCY_SYSTEM.md](./PROFICIENCY_SYSTEM.md)** - Multi-objective proficiency tracking system
 - **[AI_INTEGRATION_GUIDE.md](./AI_INTEGRATION_GUIDE.md)** - Integration with AI agents and Task Master
 - **[MCP_SERVER_DESIGN.md](./MCP_SERVER_DESIGN.md)** - MCP server architecture and design decisions
+
+### Setup Guides
+
+- **[ZED_MCP_SETUP.md](./ZED_MCP_SETUP.md)** - Detailed Zed editor setup guide with troubleshooting
+- **[ZED_QUICK_START.md](./ZED_QUICK_START.md)** - Quick reference for using CodeTandem in Zed
 
 ### Additional Documentation
 

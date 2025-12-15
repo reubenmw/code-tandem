@@ -5,12 +5,18 @@
  */
 
 import { readFile } from 'fs/promises';
-import { loadState, updateState, getModuleProgress, areAllObjectivesCompleted } from '../../utils/state.js';
+import {
+  loadState,
+  updateState,
+  getModuleProgress,
+  areAllObjectivesCompleted,
+} from '../../utils/state.js';
 import { loadModules } from '../../utils/modules.js';
 import { extractTodoCode } from '../../utils/code-parser.js';
 import { reviewCodeWithAI } from '../../utils/review.js';
 import { getAIProvider } from '../../providers/factory.js';
 import { ConfigManager } from '../../utils/config.js';
+import { getApiKey } from '../../utils/secrets.js';
 import type { ModuleProgress } from '../../types/state.js';
 
 interface ToolDefinition {
@@ -32,7 +38,8 @@ interface ToolDefinition {
  */
 const getCurrentModuleTool: ToolDefinition = {
   name: 'codetandem_get_current_module',
-  description: 'Get the current learning module with objectives, progress, and proficiency scores. Use this to understand where the user is in their learning journey.',
+  description:
+    'Get the current learning module with objectives, progress, and proficiency scores. Use this to understand where the user is in their learning journey.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -61,9 +68,7 @@ const getCurrentModuleTool: ToolDefinition = {
 
       const objectives = currentModule.objectives.map((obj, i) => {
         const objId = `obj-${i + 1}`;
-        const completed = progress.objectivesCompleted.some(
-          (c) => c.objectiveId === objId
-        );
+        const completed = progress.objectivesCompleted.some((c) => c.objectiveId === objId);
         return {
           id: objId,
           text: obj,
@@ -84,22 +89,31 @@ const getCurrentModuleTool: ToolDefinition = {
           solutionsUsed: progress.solutionsUsed,
           attempts: progress.attempts,
         },
-        canProgress: areAllObjectivesCompleted(state, state.currentModuleId, currentModule.objectives.length) && skillScore >= 7.0,
+        canProgress:
+          areAllObjectivesCompleted(
+            state,
+            state.currentModuleId,
+            currentModule.objectives.length
+          ) && skillScore >= 7.0,
       };
 
       return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify(result, null, 2),
-        }],
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify({ error: message }, null, 2),
-        }],
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ error: message }, null, 2),
+          },
+        ],
         isError: true,
       };
     }
@@ -111,7 +125,8 @@ const getCurrentModuleTool: ToolDefinition = {
  */
 const reviewCodeTool: ToolDefinition = {
   name: 'codetandem_review_code',
-  description: 'Submit code for AI review and proficiency scoring. Returns feedback, score (with penalties), and whether objectives are complete. This is the PRIMARY way AI should evaluate user code.',
+  description:
+    'Submit code for AI review and proficiency scoring. Returns feedback, score (with penalties), and whether objectives are complete. This is the PRIMARY way AI should evaluate user code.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -163,14 +178,16 @@ const reviewCodeTool: ToolDefinition = {
       }
 
       if (!codeExtraction) {
-        throw new Error(`Could not extract code from ${filePath}${todoId ? ` for TODO: ${todoId}` : ''}`);
+        throw new Error(
+          `Could not extract code from ${filePath}${todoId ? ` for TODO: ${todoId}` : ''}`
+        );
       }
 
       // Get AI provider
       const config = new ConfigManager();
       const provider = await config.getProvider();
       const model = await config.getModel();
-      const apiKey = await config.getApiKey(provider);
+      const apiKey = await getApiKey(provider);
 
       if (!apiKey) {
         throw new Error('No API key configured. Run: codetandem config set-key');
@@ -221,7 +238,11 @@ const reviewCodeTool: ToolDefinition = {
       // Reload state to get updated progress
       const updatedState = await loadState(statePath);
       const updatedProgress = getModuleProgress(updatedState, state.currentModuleId);
-      const allComplete = areAllObjectivesCompleted(updatedState, state.currentModuleId, currentModule.objectives.length);
+      const allComplete = areAllObjectivesCompleted(
+        updatedState,
+        state.currentModuleId,
+        currentModule.objectives.length
+      );
 
       // Check if module can be completed
       let moduleComplete = false;
@@ -273,7 +294,8 @@ const reviewCodeTool: ToolDefinition = {
         progress: {
           objectivesComplete: updatedProgress.objectivesCompleted.length,
           objectivesTotal: currentModule.objectives.length,
-          remainingObjectives: currentModule.objectives.length - updatedProgress.objectivesCompleted.length,
+          remainingObjectives:
+            currentModule.objectives.length - updatedProgress.objectivesCompleted.length,
         },
         moduleComplete,
         nextModule,
@@ -281,18 +303,22 @@ const reviewCodeTool: ToolDefinition = {
       };
 
       return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify(result, null, 2),
-        }],
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify({ error: message }, null, 2),
-        }],
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ error: message }, null, 2),
+          },
+        ],
         isError: true,
       };
     }
@@ -304,7 +330,8 @@ const reviewCodeTool: ToolDefinition = {
  */
 const getHintTool: ToolDefinition = {
   name: 'codetandem_get_hint',
-  description: 'Get AI-generated hint for current objective. WARNING: Applies -0.5 penalty to proficiency score. Only use when user is stuck.',
+  description:
+    'Get AI-generated hint for current objective. WARNING: Applies -0.5 penalty to proficiency score. Only use when user is stuck.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -356,7 +383,10 @@ const getHintTool: ToolDefinition = {
       ];
 
       const hintLevel = Math.min(progress.hintsUsed - 1, hints.length - 1);
-      const hint = hints[hintLevel] || hints[hints.length - 1] || 'Review the objective and try breaking it into smaller steps.';
+      const hint =
+        hints[hintLevel] ||
+        hints[hints.length - 1] ||
+        'Review the objective and try breaking it into smaller steps.';
 
       const result = {
         objective,
@@ -364,23 +394,27 @@ const getHintTool: ToolDefinition = {
         penaltyApplied: 0.5,
         totalHints: progress.hintsUsed,
         totalSolutions: progress.solutionsUsed,
-        currentPenalty: (progress.hintsUsed * 0.5) + (progress.solutionsUsed * 1.5),
+        currentPenalty: progress.hintsUsed * 0.5 + progress.solutionsUsed * 1.5,
         warning: 'Hint usage reduces your proficiency score by 0.5 points',
       };
 
       return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify(result, null, 2),
-        }],
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify({ error: message }, null, 2),
-        }],
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ error: message }, null, 2),
+          },
+        ],
         isError: true,
       };
     }
@@ -392,7 +426,8 @@ const getHintTool: ToolDefinition = {
  */
 const getSolutionTool: ToolDefinition = {
   name: 'codetandem_get_solution',
-  description: 'Get AI-generated complete solution. WARNING: Applies -1.5 penalty to proficiency score. Requires confirmation=true. Only use as last resort.',
+  description:
+    'Get AI-generated complete solution. WARNING: Applies -1.5 penalty to proficiency score. Requires confirmation=true. Only use as last resort.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -419,18 +454,24 @@ const getSolutionTool: ToolDefinition = {
 
       if (!confirm) {
         return {
-          content: [{
-            type: 'text',
-            text: JSON.stringify({
-              error: 'Confirmation required',
-              message: 'Solution request applies -1.5 penalty. Set confirm=true to proceed.',
-              alternatives: [
-                'Use codetandem_get_hint (only -0.5 penalty)',
-                'Ask AI to explain the concept',
-                'Review module documentation',
-              ],
-            }, null, 2),
-          }],
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  error: 'Confirmation required',
+                  message: 'Solution request applies -1.5 penalty. Set confirm=true to proceed.',
+                  alternatives: [
+                    'Use codetandem_get_hint (only -0.5 penalty)',
+                    'Ask AI to explain the concept',
+                    'Review module documentation',
+                  ],
+                },
+                null,
+                2
+              ),
+            },
+          ],
           isError: true,
         };
       }
@@ -469,23 +510,27 @@ const getSolutionTool: ToolDefinition = {
         penaltyApplied: 1.5,
         totalHints: progress.hintsUsed,
         totalSolutions: progress.solutionsUsed,
-        currentPenalty: (progress.hintsUsed * 0.5) + (progress.solutionsUsed * 1.5),
+        currentPenalty: progress.hintsUsed * 0.5 + progress.solutionsUsed * 1.5,
         warning: 'Solution usage significantly reduces learning and proficiency score',
       };
 
       return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify(result, null, 2),
-        }],
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify({ error: message }, null, 2),
-        }],
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ error: message }, null, 2),
+          },
+        ],
         isError: true,
       };
     }

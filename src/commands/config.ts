@@ -117,46 +117,40 @@ function createGetCommand(): Command {
  * config show command
  */
 function createShowCommand(): Command {
-  return new Command('show')
-    .description('Show all configuration values')
-    .action(async () => {
-      try {
-        const configManager = getConfigManager();
+  return new Command('show').description('Show all configuration values').action(async () => {
+    try {
+      const configManager = getConfigManager();
 
-        console.log(chalk.cyan.bold('\nCodeTandem Configuration\n'));
-        console.log('━'.repeat(50));
+      console.log(chalk.cyan.bold('\nCodeTandem Configuration\n'));
+      console.log('━'.repeat(50));
 
-        // Provider
-        const provider = await configManager.getProvider();
-        console.log(
-          chalk.cyan('Provider:    ') + (provider || chalk.dim('not set'))
-        );
+      // Provider
+      const provider = await configManager.getProvider();
+      console.log(chalk.cyan('Provider:    ') + (provider || chalk.dim('not set')));
 
-        // Model
-        const model = await configManager.getModel();
-        console.log(
-          chalk.cyan('Model:       ') + (model || chalk.dim('not set'))
-        );
+      // Model
+      const model = await configManager.getModel();
+      console.log(chalk.cyan('Model:       ') + (model || chalk.dim('not set')));
 
-        // API Key
-        if (provider) {
-          const apiKey = await getApiKey(provider);
-          if (apiKey) {
-            const maskedKey = apiKey.length > 8 ? apiKey.slice(0, 8) + '...' : '***';
-            console.log(chalk.cyan('API Key:     ') + maskedKey);
-          } else {
-            console.log(chalk.cyan('API Key:     ') + chalk.dim('not set'));
-          }
+      // API Key
+      if (provider) {
+        const apiKey = await getApiKey(provider);
+        if (apiKey) {
+          const maskedKey = apiKey.length > 8 ? apiKey.slice(0, 8) + '...' : '***';
+          console.log(chalk.cyan('API Key:     ') + maskedKey);
         } else {
           console.log(chalk.cyan('API Key:     ') + chalk.dim('not set'));
         }
-
-        console.log('━'.repeat(50) + '\n');
-      } catch (error) {
-        console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);
-        process.exit(1);
+      } else {
+        console.log(chalk.cyan('API Key:     ') + chalk.dim('not set'));
       }
-    });
+
+      console.log('━'.repeat(50) + '\n');
+    } catch (error) {
+      console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
 }
 
 /**

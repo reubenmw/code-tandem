@@ -8,6 +8,7 @@ import { join } from 'path';
 import chalk from 'chalk';
 import { getAIProvider } from '../providers/factory.js';
 import { ConfigManager } from '../utils/config.js';
+import { getApiKey } from '../utils/secrets.js';
 import { loadState, getCurrentModuleId, getSkillScore } from '../utils/state.js';
 import { loadModules, getModuleById } from '../utils/modules.js';
 import { extractTodoCode, findAllTodos } from '../utils/code-parser.js';
@@ -46,7 +47,7 @@ export const startCommand = new Command('start')
           taskDifficulty: 'progressive',
           autoReview: true,
           autoProgress: true,
-          detailedFeedback: true
+          detailedFeedback: true,
         };
       }
 
@@ -54,7 +55,7 @@ export const startCommand = new Command('start')
       const config = new ConfigManager();
       const provider = await config.getProvider();
       const model = await config.getModel();
-      const apiKey = await config.getApiKey(provider);
+      const apiKey = await getApiKey(provider);
 
       if (!apiKey) {
         console.error(chalk.red('❌ Error: No API key configured'));
@@ -113,7 +114,7 @@ export const startCommand = new Command('start')
           state,
           modules,
           currentModule,
-          projectPath: '.'
+          projectPath: '.',
         };
 
         let fileContent = '';
@@ -136,7 +137,7 @@ export const startCommand = new Command('start')
           {
             filePath: file,
             description: `Working on: ${currentModule.title}`,
-            requirements: objective
+            requirements: objective,
           },
           0.7
         );
@@ -149,7 +150,6 @@ export const startCommand = new Command('start')
         if (settings.autoReview) {
           console.log(chalk.dim('💡 Tip: After implementing, run: codetandem review ' + file));
         }
-
       } else {
         // No file specified - show module overview
         console.log(chalk.bold('📚 Module Objectives:\n'));
@@ -194,7 +194,7 @@ Keep it concise (5-8 lines max) and motivational.`;
         const response = await aiProvider.generateCodeSuggestion(
           prompt,
           {
-            description: 'Module overview'
+            description: 'Module overview',
           },
           0.7
         );
@@ -204,7 +204,6 @@ Keep it concise (5-8 lines max) and motivational.`;
         console.log(chalk.gray('─'.repeat(70)));
         console.log();
       }
-
     } catch (error) {
       console.error(chalk.red('❌ Error:'), error instanceof Error ? error.message : error);
       process.exit(1);
