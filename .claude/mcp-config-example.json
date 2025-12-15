@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "codetandem": {
+      "command": "npx",
+      "args": ["-y", "codetandem-mcp"],
+      "cwd": "/path/to/your/learning/project",
+      "env": {}
+    }
+  }
+}

@@ -11,7 +11,13 @@ import { dirname, join } from 'path';
 import {
   configCommand,
   initCommand,
-  nextCommand,
+  generateCurriculumCommand,
+  settingsCommand,
+  startCommand,
+  reviewCommand,
+  generateCommand,
+  statusCommand,
+  listCommand,
   testCommand,
   hintCommand,
   solveCommand,
@@ -35,7 +41,13 @@ program
 // Add all commands
 program.addCommand(configCommand);
 program.addCommand(initCommand);
-program.addCommand(nextCommand);
+program.addCommand(generateCurriculumCommand);
+program.addCommand(settingsCommand);
+program.addCommand(startCommand);
+program.addCommand(reviewCommand);
+program.addCommand(generateCommand);
+program.addCommand(statusCommand);
+program.addCommand(listCommand);
 program.addCommand(testCommand);
 program.addCommand(hintCommand);
 program.addCommand(solveCommand);

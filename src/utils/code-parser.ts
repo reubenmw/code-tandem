@@ -8,6 +8,7 @@ export interface CodeExtraction {
   filePath: string;
   todoLine: number;
   todoText: string;
+  todoId?: string; // Extracted from TODO: [id] format
   code: string;
   startLine: number;
   endLine: number;
@@ -22,21 +23,25 @@ export async function extractTodoCode(
     const content = await readFile(filePath, 'utf-8');
     const lines = content.split('\n');
 
-    // Find all TODO comments
-    const todoPattern = /\/\/\s*TODO:?\s*(.+)/i;
-    const todos: [number, string][] = [];
+    // Find all TODO comments with optional ID
+    // Supports: // TODO: [obj-1] Description
+    //          // TODO: Description
+    const todoPattern = /\/\/\s*TODO:?\s*(?:\[([^\]]+)\])?\s*(.+)/i;
+    const todos: [number, string, string | undefined][] = [];
 
     lines.forEach((line, index) => {
       const match = line.match(todoPattern);
       if (match) {
-        todos.push([index + 1, match[1]!.trim()]);
+        const todoId = match[1]?.trim();
+        const todoText = match[2]?.trim() || '';
+        todos.push([index + 1, todoText, todoId]);
       }
     });
 
     if (todos.length === 0) return null;
 
     // Select target TODO
-    let targetTodo: [number, string] | undefined;
+    let targetTodo: [number, string, string | undefined] | undefined;
     if (todoText) {
       targetTodo = todos.find(([, text]) => text.toLowerCase().includes(todoText.toLowerCase()));
     } else {
@@ -45,7 +50,7 @@ export async function extractTodoCode(
 
     if (!targetTodo) return null;
 
-    const [todoLine, todoContent] = targetTodo;
+    const [todoLine, todoContent, todoId] = targetTodo;
 
     // Find code after TODO
     const nextTodoLine = todos.find(([line]) => line > todoLine)?.[0];
@@ -63,6 +68,7 @@ export async function extractTodoCode(
       filePath,
       todoLine,
       todoText: todoContent,
+      todoId,
       code: codeLines.join('\n'),
       startLine: todoLine + 1,
       endLine: todoLine + codeLines.length,
@@ -72,17 +78,30 @@ export async function extractTodoCode(
   }
 }
 
-export async function findAllTodos(filePath: string): Promise<[number, string][]> {
+export interface TodoInfo {
+  line: number;
+  text: string;
+  id?: string;
+}
+
+export async function findAllTodos(filePath: string): Promise<TodoInfo[]> {
   try {
     const content = await readFile(filePath, 'utf-8');
     const lines = content.split('\n');
-    const todoPattern = /\/\/\s*TODO:?\s*(.+)/i;
-    const todos: [number, string][] = [];
+    // Supports: // TODO: [obj-1] Description or // TODO: Description
+    const todoPattern = /\/\/\s*TODO:?\s*(?:\[([^\]]+)\])?\s*(.+)/i;
+    const todos: TodoInfo[] = [];
 
     lines.forEach((line, index) => {
       const match = line.match(todoPattern);
       if (match) {
-        todos.push([index + 1, match[1]!.trim()]);
+        const todoId = match[1]?.trim();
+        const todoText = match[2]?.trim() || '';
+        todos.push({
+          line: index + 1,
+          text: todoText,
+          id: todoId,
+        });
       }
     });
 

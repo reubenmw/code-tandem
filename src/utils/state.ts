@@ -97,6 +97,21 @@ export async function updateState(
   options: UpdateStateOptions
 ): Promise<StateData> {
   const state = await loadState(statePath);
+  const currentId = state.currentModuleId;
+
+  // Initialize moduleProgress if needed
+  if (!state.moduleProgress) {
+    state.moduleProgress = {};
+  }
+  if (!state.moduleProgress[currentId]) {
+    state.moduleProgress[currentId] = {
+      attempts: 0,
+      objectivesCompleted: [],
+      hintsUsed: 0,
+      solutionsUsed: 0,
+      bestScore: 0,
+    };
+  }
 
   // Update current module
   if (options.currentModuleId !== undefined) {
@@ -105,8 +120,37 @@ export async function updateState(
 
   // Update skill score for current module
   if (options.skillScore !== undefined) {
-    const currentId = state.currentModuleId;
     state.skillScores[currentId] = options.skillScore;
+    // Update best score
+    if (options.skillScore > state.moduleProgress[currentId]!.bestScore) {
+      state.moduleProgress[currentId]!.bestScore = options.skillScore;
+    }
+  }
+
+  // Record objective completion
+  if (options.objectiveCompletion !== undefined) {
+    const progress = state.moduleProgress[currentId]!;
+
+    // Check if objective already completed (by objectiveId or todoId)
+    const alreadyCompleted = progress.objectivesCompleted.some(
+      (obj) =>
+        obj.objectiveId === options.objectiveCompletion!.objectiveId ||
+        (obj.todoId && obj.todoId === options.objectiveCompletion!.todoId)
+    );
+
+    if (!alreadyCompleted) {
+      progress.objectivesCompleted.push(options.objectiveCompletion);
+    }
+  }
+
+  // Increment hints used
+  if (options.incrementHints) {
+    state.moduleProgress[currentId]!.hintsUsed += 1;
+  }
+
+  // Increment solutions used
+  if (options.incrementSolutions) {
+    state.moduleProgress[currentId]!.solutionsUsed += 1;
   }
 
   // Mark module as completed
@@ -121,9 +165,8 @@ export async function updateState(
     state.projectTree = options.projectTree;
   }
 
-  // Update hint count
+  // Update hint count (DEPRECATED - kept for backward compatibility)
   if (options.hintCount !== undefined) {
-    const currentId = state.currentModuleId;
     if (!state.hints) {
       state.hints = {};
     }
@@ -198,4 +241,42 @@ export async function incrementSkillScore(
   await saveState(statePath, state);
 
   return newScore;
+}
+
+/**
+ * Get module progress for a specific module
+ */
+export function getModuleProgress(state: StateData, moduleId: string) {
+  return (
+    state.moduleProgress?.[moduleId] ?? {
+      attempts: 0,
+      objectivesCompleted: [],
+      hintsUsed: 0,
+      solutionsUsed: 0,
+      bestScore: 0,
+    }
+  );
+}
+
+/**
+ * Check if all objectives are completed for a module
+ */
+export function areAllObjectivesCompleted(
+  state: StateData,
+  moduleId: string,
+  totalObjectives: number
+): boolean {
+  const progress = getModuleProgress(state, moduleId);
+  return progress.objectivesCompleted.length >= totalObjectives;
+}
+
+/**
+ * Calculate proficiency penalty based on hints and solutions used
+ */
+export function calculateProficiencyPenalty(hintsUsed: number, solutionsUsed: number): number {
+  // Each hint reduces score by 0.5 points
+  // Each solution reduces score by 1.5 points
+  const hintPenalty = hintsUsed * 0.5;
+  const solutionPenalty = solutionsUsed * 1.5;
+  return Math.min(hintPenalty + solutionPenalty, 3.0); // Max 3 point penalty
 }
