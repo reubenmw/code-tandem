@@ -18,21 +18,38 @@
     "build": "tsup",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
+    "lint": "eslint 'src/**/*.ts' --ignore-pattern 'src/**/*.test.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --ignore-pattern 'src/**/*.test.ts' --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test -- --run"
   },
   "keywords": [
     "ai",
     "cli",
     "coding",
     "education",
-    "taskmaster"
+    "taskmaster",
+    "learning",
+    "pair-programming",
+    "code-review"
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reubenwestrop/code-tandem.git"
+  },
+  "bugs": {
+    "url": "https://github.com/reubenwestrop/code-tandem/issues"
+  },
+  "homepage": "https://github.com/reubenwestrop/code-tandem#readme",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=18.0.0"
   },

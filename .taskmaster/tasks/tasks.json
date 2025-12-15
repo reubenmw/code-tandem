@@ -691,7 +691,7 @@
         "description": "Port config.py, secrets.py, state.py modules to TypeScript/JavaScript. Replace keyring with a Node.js alternative (keytar or system keychain). Implement configuration management using cosmiconfig or similar",
         "details": "",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "11"
         ],
@@ -699,7 +699,8 @@
         "subtasks": [],
         "complexity": 6,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "Break down the porting of core utility modules. Create a subtask for implementing application state management (reading/writing the state JSON file). Create another for handling configuration files using a library like `cosmiconfig`. Finally, create a subtask to research, select, and implement a Node.js library for secure credential storage (e.g., `keytar`), replacing the Python `keyring` functionality."
+        "expansionPrompt": "Break down the porting of core utility modules. Create a subtask for implementing application state management (reading/writing the state JSON file). Create another for handling configuration files using a library like `cosmiconfig`. Finally, create a subtask to research, select, and implement a Node.js library for secure credential storage (e.g., `keytar`), replacing the Python `keyring` functionality.",
+        "updatedAt": "2025-12-14T05:46:11.793Z"
       },
       {
         "id": "14",
@@ -707,7 +708,7 @@
         "description": "Port all commands (init, config, solve, test, hint, next, submit, set_level) from Python/Typer to Node.js using Commander.js or similar CLI framework. Maintain same command structure and arguments",
         "details": "",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "11",
           "12",
@@ -800,7 +801,8 @@
         ],
         "complexity": 8,
         "recommendedSubtasks": 7,
-        "expansionPrompt": "Decompose the migration of the CLI from Python/Typer to Node.js/Commander.js. Create a subtask for each primary command: `init`, `config`, `next`, `submit`, `test`, `hint`, and `solve`. Each subtask should focus on defining the command, its arguments, and its options in Commander.js and porting the associated business logic by calling the newly created Node.js modules."
+        "expansionPrompt": "Decompose the migration of the CLI from Python/Typer to Node.js/Commander.js. Create a subtask for each primary command: `init`, `config`, `next`, `submit`, `test`, `hint`, and `solve`. Each subtask should focus on defining the command, its arguments, and its options in Commander.js and porting the associated business logic by calling the newly created Node.js modules.",
+        "updatedAt": "2025-12-14T05:59:45.298Z"
       },
       {
         "id": "15",
@@ -808,7 +810,7 @@
         "description": "Port code_parser.py, linter.py, scanner.py to TypeScript/JavaScript. Use appropriate Node.js parsing libraries (babel/parser, @typescript-eslint/parser, or tree-sitter) for code analysis",
         "details": "",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "11"
         ],
@@ -863,7 +865,8 @@
         ],
         "complexity": 9,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down the complex task of porting code analysis features. Create a subtask to research and select a suitable JavaScript/TypeScript AST parsing library (e.g., Babel, Acorn, tree-sitter). Then, create separate subtasks to port the functionality of `code_parser.py` (generating the AST), `linter.py` (analyzing the AST), and `scanner.py` (extracting information) using the chosen library's API."
+        "expansionPrompt": "Break down the complex task of porting code analysis features. Create a subtask to research and select a suitable JavaScript/TypeScript AST parsing library (e.g., Babel, Acorn, tree-sitter). Then, create separate subtasks to port the functionality of `code_parser.py` (generating the AST), `linter.py` (analyzing the AST), and `scanner.py` (extracting information) using the chosen library's API.",
+        "updatedAt": "2025-12-14T06:12:07.676Z"
       },
       {
         "id": "16",
@@ -871,7 +874,7 @@
         "description": "Port vector_store.py and docs_ingestion.py to TypeScript/JavaScript. Replace sentence-transformers and chromadb with Node.js alternatives (e.g., @xenova/transformers, chromadb-client, or hnswlib-node)",
         "details": "",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "11"
         ],
@@ -879,7 +882,8 @@
         "subtasks": [],
         "complexity": 7,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Deconstruct the porting of the vector store and ingestion system. Create a subtask to implement the documentation ingestion pipeline. Create a second subtask to integrate a Node.js library like `@xenova/transformers.js` for generating text embeddings. Create a third subtask to set up and interact with a vector database using a client like `chromadb-client`. Finally, create a subtask to tie these components together by porting the main `vector_store.py` logic."
+        "expansionPrompt": "Deconstruct the porting of the vector store and ingestion system. Create a subtask to implement the documentation ingestion pipeline. Create a second subtask to integrate a Node.js library like `@xenova/transformers.js` for generating text embeddings. Create a third subtask to set up and interact with a vector database using a client like `chromadb-client`. Finally, create a subtask to tie these components together by porting the main `vector_store.py` logic.",
+        "updatedAt": "2025-12-14T07:12:56.650Z"
       },
       {
         "id": "17",
@@ -887,7 +891,7 @@
         "description": "Port taskmaster_integration.py to TypeScript/JavaScript and enhance it to use Task Master AI's native Node.js APIs. Implement deep integration features like direct task manipulation, workflow automation, and event hooks",
         "details": "",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "11",
           "13",
@@ -945,7 +949,8 @@
         ],
         "complexity": 8,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down the integration with Task Master AI. First, create a subtask to port the existing integration logic from Python to TypeScript. Then, create subtasks to explore and implement the advanced features of the native Node.js API, such as one for direct task manipulation, another for automating workflows, and a final one for subscribing to and handling events via hooks."
+        "expansionPrompt": "Break down the integration with Task Master AI. First, create a subtask to port the existing integration logic from Python to TypeScript. Then, create subtasks to explore and implement the advanced features of the native Node.js API, such as one for direct task manipulation, another for automating workflows, and a final one for subscribing to and handling events via hooks.",
+        "updatedAt": "2025-12-14T07:14:32.286Z"
       },
       {
         "id": "18",
@@ -953,7 +958,7 @@
         "description": "Port tandem.py, curriculum.py, review.py, modules.py to TypeScript/JavaScript. Ensure all business logic and features are preserved",
         "details": "",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "11",
           "12",
@@ -963,7 +968,8 @@
         "subtasks": [],
         "complexity": 7,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Create a subtask for each of the remaining core logic modules that need to be ported to TypeScript. This includes one subtask for `curriculum.py` (parsing and managing curriculum structure), one for `modules.py` (handling module data), one for `review.py` (logic for code review), and one for `tandem.py` (core tandem programming session logic)."
+        "expansionPrompt": "Create a subtask for each of the remaining core logic modules that need to be ported to TypeScript. This includes one subtask for `curriculum.py` (parsing and managing curriculum structure), one for `modules.py` (handling module data), one for `review.py` (logic for code review), and one for `tandem.py` (core tandem programming session logic).",
+        "updatedAt": "2025-12-14T07:32:10.617Z"
       },
       {
         "id": "19",
@@ -971,7 +977,7 @@
         "description": "Port all tests from pytest to Jest or Vitest. Ensure test coverage is maintained and all functionality is validated in the Node.js version",
         "details": "",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "12",
           "13",
@@ -1052,7 +1058,8 @@
         ],
         "complexity": 8,
         "recommendedSubtasks": 6,
-        "expansionPrompt": "Structure the test suite migration from `pytest` to `Vitest`/`Jest`. Create subtasks based on application features: one for CLI command tests, one for AI provider tests, one for core utility tests, one for code analysis tests, one for the vector store, and a final one for ensuring test coverage goals are met across the new suite."
+        "expansionPrompt": "Structure the test suite migration from `pytest` to `Vitest`/`Jest`. Create subtasks based on application features: one for CLI command tests, one for AI provider tests, one for core utility tests, one for code analysis tests, one for the vector store, and a final one for ensuring test coverage goals are met across the new suite.",
+        "updatedAt": "2025-12-14T07:39:05.003Z"
       },
       {
         "id": "20",
@@ -1060,7 +1067,7 @@
         "description": "Configure executable generation using pkg or ncc. Update GitHub Actions workflows to build Node.js executables for Windows, macOS, and Linux. Update documentation and installation instructions",
         "details": "",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "19"
         ],
@@ -1068,14 +1075,15 @@
         "subtasks": [],
         "complexity": 7,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down the process of packaging the Node.js application. Create a subtask to research and select a packaging tool (`pkg`, `ncc`, etc.) and create the build configuration. Create another subtask to update the GitHub Actions CI/CD pipeline for cross-platform builds. Add a subtask for testing the generated executables on clean Windows, macOS, and Linux environments. Finally, a subtask to update all user documentation with the new installation instructions."
+        "expansionPrompt": "Break down the process of packaging the Node.js application. Create a subtask to research and select a packaging tool (`pkg`, `ncc`, etc.) and create the build configuration. Create another subtask to update the GitHub Actions CI/CD pipeline for cross-platform builds. Add a subtask for testing the generated executables on clean Windows, macOS, and Linux environments. Finally, a subtask to update all user documentation with the new installation instructions.",
+        "updatedAt": "2025-12-14T07:49:15.685Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-12-09T05:11:16.021Z",
+      "lastModified": "2025-12-14T07:49:15.686Z",
       "taskCount": 20,
-      "completedCount": 12,
+      "completedCount": 20,
       "tags": [
         "master"
       ]

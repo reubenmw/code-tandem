@@ -16,6 +16,7 @@ export abstract class BaseAIProvider {
     this.model = config.model;
   }
 
+  /* eslint-disable no-unused-vars */
   /**
    * Generate code suggestions based on a prompt
    */
@@ -34,6 +35,7 @@ export abstract class BaseAIProvider {
    * Have a chat conversation with the AI
    */
   abstract chat(messages: ChatMessage[], temperature?: number): Promise<AIResponse>;
+  /* eslint-enable no-unused-vars */
 
   /**
    * Build a context string from context object

@@ -1,0 +1,43 @@
+# Source files
+src/
+tsconfig.json
+tsup.config.ts
+
+# Tests
+*.test.ts
+*.spec.ts
+vitest.config.ts
+coverage/
+
+# Development
+.github/
+.vscode/
+node_modules/
+
+# Python legacy
+codetandem/
+*.py
+*.pyc
+__pycache__/
+setup.py
+requirements.txt
+Pipfile
+Pipfile.lock
+
+# Build artifacts
+*.log
+*.tsbuildinfo
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+.env
+.env.local
