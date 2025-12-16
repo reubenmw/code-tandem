@@ -18,6 +18,7 @@ import { getAIProvider } from '../../providers/factory.js';
 import { ConfigManager } from '../../utils/config.js';
 import { getApiKey } from '../../utils/secrets.js';
 import type { ModuleProgress } from '../../types/state.js';
+import { getStatePath, getModulesPath } from '../../utils/paths.js';
 
 interface ToolDefinition {
   name: string;
@@ -52,8 +53,8 @@ const getCurrentModuleTool: ToolDefinition = {
   handler: async (args) => {
     try {
       const projectPath = (args.projectPath as string) || '.';
-      const statePath = `${projectPath}/codetandem.state.json`;
-      const modulesPath = `${projectPath}/modules.json`;
+      const statePath = getStatePath(projectPath);
+      const modulesPath = getModulesPath(projectPath);
 
       const state = await loadState(statePath);
       const modules = await loadModules(modulesPath);
@@ -150,8 +151,8 @@ const reviewCodeTool: ToolDefinition = {
       const filePath = args.filePath as string;
       const todoId = args.todoId as string | undefined;
       const projectPath = (args.projectPath as string) || '.';
-      const statePath = `${projectPath}/codetandem.state.json`;
-      const modulesPath = `${projectPath}/modules.json`;
+      const statePath = getStatePath(projectPath);
+      const modulesPath = getModulesPath(projectPath);
 
       const state = await loadState(statePath);
       const modules = await loadModules(modulesPath);
@@ -350,8 +351,8 @@ const getHintTool: ToolDefinition = {
     try {
       const objectiveIndex = args.objectiveIndex as number;
       const projectPath = (args.projectPath as string) || '.';
-      const statePath = `${projectPath}/codetandem.state.json`;
-      const modulesPath = `${projectPath}/modules.json`;
+      const statePath = getStatePath(projectPath);
+      const modulesPath = getModulesPath(projectPath);
 
       const state = await loadState(statePath);
       const modules = await loadModules(modulesPath);

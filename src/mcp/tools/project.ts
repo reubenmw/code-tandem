@@ -7,6 +7,7 @@ import { join, resolve } from 'path';
 import chalk from 'chalk';
 import { loadState, getCurrentModuleId, getModuleProgress } from '../../utils/state.js';
 import { loadModules, getModuleById } from '../../utils/modules.js';
+import { getStatePath, getModulesPath } from '../../utils/paths.js';
 import {
   loadProjectContext,
   buildCodingPrompt,
@@ -33,7 +34,8 @@ interface ToolDefinition {
 
 const createProjectFilesTool: ToolDefinition = {
   name: 'codetandem_create_project_files',
-  description: 'Create project files for the current module objectives.',
+  description:
+    'DEPRECATED: Use codetandem_create_feature instead. This tool creates basic TODO files but does not follow the product-first philosophy. Use codetandem_create_feature to create real product features.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -46,8 +48,8 @@ const createProjectFilesTool: ToolDefinition = {
   handler: async (args) => {
     try {
       const projectPath = (args.projectPath as string) || '.';
-      const statePath = `${projectPath}/codetandem.state.json`;
-      const modulesPath = `${projectPath}/modules.json`;
+      const statePath = getStatePath(projectPath);
+      const modulesPath = getModulesPath(projectPath);
 
       const state = await loadState(statePath);
       const modules = await loadModules(modulesPath);
@@ -101,11 +103,23 @@ const createProjectFilesTool: ToolDefinition = {
 /**
  * Create a feature with curriculum-aligned TODOs
  * This is the PRIMARY tool for AI agents to help users build features
+ *
+ * CRITICAL PHILOSOPHY - VIBE CODER / USER-LED DEVELOPMENT:
+ * - The USER is a "vibe coder" who KNOWS what product they want to build
+ * - The USER is steering and directing the AI to build THEIR product
+ * - PRIORITY #1: Build the feature the user requested - this is THEIR vision
+ * - PRIORITY #2: Learning objectives should naturally fit into their requested features
+ * - The user's product vision and feature request trump curriculum alignment
+ * - Learning happens organically by building what THEY want, not forced exercises
+ * - NO dedicated learning files (e.g., "exercise-1.js", "practice.py")
+ * - NO curriculum-based folders (e.g., "module-1/", "lesson-2/", "python-basics/")
+ * - USE product architecture folders (e.g., "src/auth/", "lib/", "api/", "services/")
+ * - If conflict: USER'S PRODUCT VISION WINS, not the curriculum
  */
 const createFeatureTool: ToolDefinition = {
   name: 'codetandem_create_feature',
   description:
-    'Create a feature with curriculum-aligned code and TODOs. The AI balances how much code to write vs. how much the user should complete based on their current module position and skill level. Use this when the user wants to build a feature.',
+    'Build the EXACT feature the user wants for THEIR product. CRITICAL: User is a "vibe coder" driving the product vision - they know what they want to build. Your job is to help build THEIR product, weaving learning naturally into THEIR requested features. User\'s vision comes FIRST, curriculum alignment is secondary. Build what they ask for.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -189,8 +203,24 @@ const createFeatureTool: ToolDefinition = {
       // Apply the code modification
       const createdFilePath = await applyCodeModification(modification, projectPath, false);
 
+      // Validate file path doesn't use curriculum-based naming
+      const pathLower = modification.filePath.toLowerCase();
+      const hasBadNaming =
+        pathLower.includes('module-') ||
+        pathLower.includes('lesson-') ||
+        pathLower.includes('chapter-') ||
+        pathLower.includes('exercise-') ||
+        pathLower.includes('practice-') ||
+        pathLower.includes('week-');
+
       const result = {
         success: true,
+        vibeCoderReminder:
+          '🚀 VIBE CODER MODE: You\'re building YOUR product, YOUR vision. This code is YOURS. Learning happens naturally as you build what you want. Keep steering the direction!',
+        ...(hasBadNaming && {
+          architectureWarning:
+            '⚠️ WARNING: File path contains curriculum-based naming (module-X, lesson-Y, etc). Use product architecture instead (src/auth/, lib/, api/, etc). This should be a REAL product structure.',
+        }),
         featureDescription,
         filePath: modification.filePath,
         absolutePath: createdFilePath,
@@ -215,11 +245,12 @@ const createFeatureTool: ToolDefinition = {
           line: todo.line,
         })),
         nextSteps: [
-          'Review the generated code to understand the structure',
-          'Each TODO has SUCCESS CRITERIA comments above it - read them carefully',
-          'Complete the TODO tasks to implement the key learning objectives',
-          `Use codetandem_review_code with todoId (e.g., "${modification.todos[0]?.id}") when ready to submit`,
-          'Use codetandem_get_hint if you get stuck (applies -0.5 penalty)',
+          'Review the code - this is YOUR product feature taking shape',
+          'Each TODO has SUCCESS CRITERIA - complete them to finish YOUR feature',
+          'This code is YOURS - modify it however you want to match your vision',
+          `Use codetandem_review_code with todoId (e.g., "${modification.todos[0]?.id}") when ready`,
+          'Use codetandem_get_hint if stuck (applies -0.5 penalty)',
+          'Keep building YOUR product YOUR way - you\'re the vibe coder in charge!',
         ],
       };
 

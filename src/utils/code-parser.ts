@@ -3,6 +3,7 @@
  */
 
 import { readFile } from 'fs/promises';
+import { createTodoPattern, createSuccessCriteriaPattern, isCommentLine } from './language.js';
 
 export interface CodeExtraction {
   filePath: string;
@@ -25,16 +26,20 @@ export async function extractTodoCode(
     const lines = content.split('\n');
 
     // Find all TODO comments with optional ID
-    // Supports: // TODO: [obj-1] Description
-    //          // TODO: Description
-    const todoPattern = /\/\/\s*TODO:?\s*(?:\[([^\]]+)\])?\s*(.+)/i;
+    // Supports multiple languages: // TODO: [obj-1] Description (JS/TS)
+    //                               # TODO: [obj-1] Description (Python)
+    //                               -- TODO: [obj-1] Description (SQL/Lua)
+    const todoPattern = createTodoPattern();
     const todos: [number, string, string | undefined][] = [];
 
     lines.forEach((line, index) => {
       const match = line.match(todoPattern);
       if (match) {
-        const todoId = match[1]?.trim();
-        const todoText = match[2]?.trim() || '';
+        // match[1] is comment syntax (// or # or --)
+        // match[2] is todoId
+        // match[3] is todoText
+        const todoId = match[2]?.trim();
+        const todoText = match[3]?.trim() || '';
         todos.push([index + 1, todoText, todoId]);
       }
     });
@@ -56,27 +61,29 @@ export async function extractTodoCode(
     // Extract success criteria from comments above TODO
     const successCriteria: string[] = [];
     if (todoId) {
-      // Look for SUCCESS CRITERIA comments above the TODO
+      // Look for SUCCESS CRITERIA comments above the TODO (supports any comment syntax)
+      const criteriaPattern = createSuccessCriteriaPattern(todoId);
       let criteriaStartLine = -1;
+
       for (let i = todoLine - 2; i >= 0; i--) {
-        const line = lines[i]?.trim() || '';
-        if (line.startsWith('//') && line.includes('SUCCESS CRITERIA') && line.includes(todoId)) {
+        const line = lines[i] || '';
+        if (criteriaPattern.test(line)) {
           criteriaStartLine = i;
           break;
         }
         // Stop if we hit non-comment or empty line
-        if (!line.startsWith('//') && line !== '') {
+        if (!isCommentLine(line) && line.trim() !== '') {
           break;
         }
       }
 
-      // Extract criteria lines
+      // Extract criteria lines (supports any comment syntax)
       if (criteriaStartLine >= 0) {
         for (let i = criteriaStartLine + 1; i < todoLine; i++) {
           const line = lines[i]?.trim() || '';
-          if (line.startsWith('//')) {
-            // Remove leading // and whitespace, and optional - prefix
-            const criterion = line.replace(/^\/\/\s*-?\s*/, '').trim();
+          if (isCommentLine(line)) {
+            // Remove leading comment syntax and whitespace, and optional - prefix
+            const criterion = line.replace(/^(\/\/|#|--|;)\s*-?\s*/, '').trim();
             if (criterion && !criterion.includes('TODO:')) {
               successCriteria.push(criterion);
             }
@@ -122,15 +129,20 @@ export async function findAllTodos(filePath: string): Promise<TodoInfo[]> {
   try {
     const content = await readFile(filePath, 'utf-8');
     const lines = content.split('\n');
-    // Supports: // TODO: [obj-1] Description or // TODO: Description
-    const todoPattern = /\/\/\s*TODO:?\s*(?:\[([^\]]+)\])?\s*(.+)/i;
+    // Supports multiple languages: // TODO: [obj-1] Description (JS/TS)
+    //                               # TODO: [obj-1] Description (Python/Ruby)
+    //                               -- TODO: [obj-1] Description (SQL/Lua)
+    const todoPattern = createTodoPattern();
     const todos: TodoInfo[] = [];
 
     lines.forEach((line, index) => {
       const match = line.match(todoPattern);
       if (match) {
-        const todoId = match[1]?.trim();
-        const todoText = match[2]?.trim() || '';
+        // match[1] is comment syntax (// or # or --)
+        // match[2] is todoId
+        // match[3] is todoText
+        const todoId = match[2]?.trim();
+        const todoText = match[3]?.trim() || '';
         todos.push({
           line: index + 1,
           text: todoText,

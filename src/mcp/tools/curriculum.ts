@@ -8,6 +8,7 @@ import { mkdir, writeFile, readFile } from 'fs/promises';
 import { join } from 'path';
 import { loadModules } from '../../utils/modules.js';
 import { loadState } from '../../utils/state.js';
+import { getStatePath, getModulesPath, getLrdPath, getCodetandemDir } from '../../utils/paths.js';
 
 interface ToolDefinition {
   name: string;
@@ -81,15 +82,15 @@ const initProjectTool: ToolDefinition = {
       const force = args.force as boolean;
 
       // Create .codetandem directory
-      const codetandemDir = join(projectPath, '.codetandem');
+      const codetandemDir = getCodetandemDir(projectPath);
       await mkdir(codetandemDir, { recursive: true });
 
       // Create docs directory
       const docsDir = join(codetandemDir, 'docs');
       await mkdir(docsDir, { recursive: true });
 
-      // Create LRD file
-      const lrdPath = join(projectPath, 'lrd.md');
+      // Create LRD file (in .codetandem folder)
+      const lrdPath = getLrdPath(projectPath);
       try {
         if (force) {
           await writeFile(lrdPath, DEFAULT_LRD, 'utf-8');
@@ -158,8 +159,8 @@ const listModulesTool: ToolDefinition = {
   handler: async (args) => {
     try {
       const projectPath = (args.projectPath as string) || '.';
-      const statePath = `${projectPath}/codetandem.state.json`;
-      const modulesPath = `${projectPath}/modules.json`;
+      const statePath = getStatePath(projectPath);
+      const modulesPath = getModulesPath(projectPath);
 
       const state = await loadState(statePath);
       const modules = await loadModules(modulesPath);
@@ -251,7 +252,7 @@ const updateSettingsTool: ToolDefinition = {
   handler: async (args) => {
     try {
       const projectPath = (args.projectPath as string) || '.';
-      const settingsPath = join(projectPath, '.codetandem', 'settings.json');
+      const settingsPath = join(getCodetandemDir(projectPath), 'settings.json');
 
       // Read current settings
       let settings;

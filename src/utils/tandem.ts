@@ -11,6 +11,8 @@ import { getModuleById, loadModules } from './modules.js';
 import { BaseAIProvider } from '../providers/base.js';
 import type { StateData } from '../types/state.js';
 import { getCurrentModuleId, loadState } from './state.js';
+import { detectLanguage, getCommentSyntax } from './language.js';
+import { getStatePath, getModulesPath } from './paths.js';
 
 export interface ProjectContext {
   state: StateData;
@@ -30,21 +32,21 @@ export interface ProjectContext {
  */
 export async function loadProjectContext(
   projectPath: string,
-  modulesFile: string = 'modules.json',
-  stateFile: string = 'codetandem.state.json'
+  modulesFile?: string,
+  stateFile?: string
 ): Promise<ProjectContext> {
   const resolvedPath = resolve(projectPath);
 
-  // Load modules
-  const modulesPath = resolve(resolvedPath, modulesFile);
+  // Load modules (from .codetandem/ folder)
+  const modulesPath = modulesFile ? resolve(resolvedPath, modulesFile) : getModulesPath(resolvedPath);
   const modules = await loadModules(modulesPath);
 
   if (modules.length === 0) {
     throw new Error('No modules found in modules.json');
   }
 
-  // Load state
-  const statePath = resolve(resolvedPath, stateFile);
+  // Load state (from .codetandem/ folder)
+  const statePath = stateFile ? resolve(resolvedPath, stateFile) : getStatePath(resolvedPath);
   const state = await loadState(statePath);
 
   // Get current module
@@ -123,34 +125,18 @@ export function buildCodingPrompt(
 
   const promptParts: string[] = [];
 
-  // System context
-  promptParts.push(
-    'You are CodeTandem, an AI pair programming assistant that helps users learn by writing foundational code and leaving TODO tasks for them to complete.'
-  );
+  // Minimal system context
+  promptParts.push('You are CodeTandem helping the user build their product.');
   promptParts.push('');
 
-  // Current learning module
-  promptParts.push('# Current Learning Module');
-  promptParts.push(`Module: ${context.currentModule.title}`);
-  promptParts.push(`Module ID: ${context.currentModule.id}`);
-  promptParts.push('');
-
-  // Learning objective
+  // Context (for reference only)
+  promptParts.push('# Context');
+  promptParts.push(`Module: ${context.currentModule.title} (for reference)`);
   if (objective) {
-    promptParts.push('# Current Learning Objective');
-    promptParts.push(objective);
-    promptParts.push('');
+    promptParts.push(`Learning focus: ${objective}`);
   }
-
-  // All objectives for context
-  if (context.currentModule.objectives.length > 0) {
-    promptParts.push('# All Module Objectives');
-    for (let i = 0; i < context.currentModule.objectives.length; i++) {
-      const marker = i === objectiveIndex ? '→' : ' ';
-      promptParts.push(`${marker} ${i + 1}. ${context.currentModule.objectives[i]}`);
-    }
-    promptParts.push('');
-  }
+  promptParts.push(`User skill: ${skillLevel.toFixed(1)}/10`);
+  promptParts.push('');
 
   // Target file information
   if (targetFile) {
@@ -167,51 +153,27 @@ export function buildCodingPrompt(
     }
   }
 
-  // Feature description if provided
+  // Task
+  promptParts.push('# Task');
   if (featureDescription) {
-    promptParts.push('# Feature Request');
-    promptParts.push(`The user wants to build: ${featureDescription}`);
-    promptParts.push('');
-  }
-
-  // Task instructions with dynamic scaffolding based on skill level
-  promptParts.push('# Your Task');
-  if (featureDescription) {
-    promptParts.push('Write foundational code that:');
-    promptParts.push('1. Implements this feature in a way that aligns with the current learning objectives');
-    promptParts.push('2. Balances AI-written code with user TODOs based on the skill level and coding bias');
-    promptParts.push('3. Links TODOs to the current module objectives where appropriate');
-    promptParts.push('4. Provides educational value by leaving the most relevant parts for the user to complete');
+    promptParts.push(`Build: ${featureDescription}`);
   } else {
-    promptParts.push('Write foundational code that:');
-    promptParts.push('1. Implements the basic structure needed for the learning objective');
-    promptParts.push('2. Includes a clear TODO comment for the user to complete');
-    promptParts.push('3. Leaves the most educationally valuable part for the user to implement');
+    promptParts.push('Implement the learning objective as a product feature.');
   }
   promptParts.push('');
+  promptParts.push('Requirements:');
+  promptParts.push('- Production-ready code for their product');
+  promptParts.push(`- Scaffolding: ${codingBias} (based on skill level)`);
+  promptParts.push('- Use product architecture (src/auth/, lib/) not curriculum folders (module-1/)');
+  promptParts.push('');
 
-  // Dynamic scaffolding based on skill level and coding bias
-  promptParts.push('# Scaffolding Level');
-  promptParts.push(`User skill level: ${skillLevel.toFixed(1)}/10.0`);
-  promptParts.push(`User coding bias: ${codingBias}`);
-
-  if (codingBias === 'guided') {
-    promptParts.push('Provide DETAILED scaffolding:');
-    promptParts.push('- Write comprehensive foundational code');
-    promptParts.push('- Include detailed TODO comments with step-by-step hints');
-    promptParts.push('- Provide code snippets or examples in the TODO comment');
-  } else if (codingBias === 'balanced') {
-    promptParts.push('Provide BALANCED scaffolding:');
-    promptParts.push('- Write solid foundational code structure');
-    promptParts.push('- Include clear TODO comments describing the goal');
-    promptParts.push('- Let the user figure out implementation details');
-  } else {
-    // independent
-    promptParts.push('Provide CONCEPTUAL scaffolding:');
-    promptParts.push('- Write minimal foundational code (interfaces, types)');
-    promptParts.push('- Include high-level TODO comments describing the concept');
-    promptParts.push('- Let the user implement most of the functionality');
-  }
+  // Scaffolding guidance (concise)
+  const scaffoldingGuide = {
+    guided: 'Detailed code + step-by-step hints in TODOs',
+    balanced: 'Solid structure + clear TODO goals',
+    independent: 'Minimal code + conceptual TODOs',
+  };
+  promptParts.push(`Scaffolding approach: ${scaffoldingGuide[codingBias]}`);
   promptParts.push('');
 
   promptParts.push('Format your response as JSON with this structure:');
@@ -233,26 +195,18 @@ export function buildCodingPrompt(
   promptParts.push('  "explanation": "Brief explanation of what you implemented"');
   promptParts.push('}');
   promptParts.push('');
-  promptParts.push('**IMPORTANT TODO Format Rules:**');
+  // Language and comment syntax
+  const language = targetFile ? detectLanguage(targetFile) : { name: 'Unknown', commentSyntax: '//' };
+  const commentSyntax = language.commentSyntax;
+
+  promptParts.push('# Format');
+  promptParts.push(`Language: ${language.name} → Use ${commentSyntax} for comments`);
   promptParts.push('');
-  promptParts.push('1. Each TODO must use format: // TODO: [obj-X] <task description>');
-  promptParts.push('   - Where X is the objective number (1-based index)');
-  promptParts.push(`   - Example: // TODO: [obj-1] Implement password validation`);
-  promptParts.push('');
-  promptParts.push('2. Include success criteria as comments ABOVE each TODO:');
-  promptParts.push('   ```');
-  promptParts.push('   // SUCCESS CRITERIA for [obj-1]:');
-  promptParts.push('   // - Must validate password is at least 8 characters');
-  promptParts.push('   // - Must check for at least one uppercase letter');
-  promptParts.push('   // - Must return boolean true/false');
-  promptParts.push('   // TODO: [obj-1] Implement password validation');
-  promptParts.push('   ```');
-  promptParts.push('');
-  promptParts.push('3. Link each TODO to a specific learning objective from the module');
-  promptParts.push('');
-  promptParts.push(
-    '4. Success criteria should be measurable, specific, and tied to the learning objective'
-  );
+  promptParts.push('TODO format:');
+  promptParts.push(`${commentSyntax} SUCCESS CRITERIA for [obj-1]:`);
+  promptParts.push(`${commentSyntax} - [Criterion 1]`);
+  promptParts.push(`${commentSyntax} - [Criterion 2]`);
+  promptParts.push(`${commentSyntax} TODO: [obj-1] [Task description]`);
 
   return promptParts.join('\n');
 }
