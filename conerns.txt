@@ -1,0 +1,15 @@
+I don't think we're achieving the correct user flow in this project. It should be
+
+User inits codetandem and inputs thier goals (e.g. learn python) > AI creates curriculum and modules > User uses AI agent to create a feature of their choice > AI Agent uses the MCP to read where the user is at in their curriculum, knows the balance between how much it should code and the user, then creates the feature, placing todos that the user should complete that are relevant to their place in the curriculium > Once done, the user can submit via the command line, or using the AI agent which it will then record and will determine whether they need to stay on that module or move onto the next one because they are *highly* profficiant.
+
+Does it do this?
+
+It shouldn't
+X Create project tasks
+
+It should
+Keep track of user progress
+Tell the agent how much should be assigned to the user
+How much they need help on their current module so the agent can provide extra context and help
+Get the AI agent to record assigned project tasks somewhere with clear and detailed success criteria.
+Have the codetandem AI to rate the users code against that success criteria and provide breadcrumbs on how well they performed and rate them as complete, or incomplete.

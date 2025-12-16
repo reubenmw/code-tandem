@@ -12,7 +12,7 @@ import { getApiKey } from '../utils/secrets.js';
 import { loadState, getCurrentModuleId, getSkillScore } from '../utils/state.js';
 import { loadModules, getModuleById } from '../utils/modules.js';
 import { extractTodoCode, findAllTodos } from '../utils/code-parser.js';
-import { buildCodingPrompt } from '../utils/tandem.js';
+import { buildCodingPrompt, generateCodeWithAI, applyCodeModification } from '../utils/tandem.js';
 
 interface Settings {
   codingBias: 'guided' | 'balanced' | 'independent';
@@ -124,31 +124,51 @@ export const startCommand = new Command('start')
           // File doesn't exist yet
         }
 
-        const prompt = buildCodingPrompt(
+        const modification = await generateCodeWithAI(
+          aiProvider,
           projectContext,
           file,
           fileContent,
           objectiveIndex,
-          skillScore
+          skillScore,
+          settings.codingBias
         );
 
-        const response = await aiProvider.generateCodeSuggestion(
-          prompt,
-          {
-            filePath: file,
-            description: `Working on: ${currentModule.title}`,
-            requirements: objective,
-          },
-          0.7
-        );
+        await applyCodeModification(modification, '.');
 
         console.log(chalk.gray('─'.repeat(70)));
-        console.log(response.content);
+        console.log(chalk.green('✓ ') + modification.explanation);
+        console.log(chalk.cyan('  Modified: ') + modification.filePath);
+        console.log();
+
+        if (modification.todos.length > 0) {
+          console.log(chalk.bold('📝 TODOs created:'));
+          modification.todos.forEach((todo, i) => {
+            console.log(
+              chalk.cyan(`  ${i + 1}. [${todo.id}] ${todo.task} `) + chalk.gray(`(line ${todo.line})`)
+            );
+            if (todo.successCriteria && todo.successCriteria.length > 0) {
+              console.log(chalk.gray('     Success Criteria:'));
+              todo.successCriteria.forEach((criterion) => {
+                console.log(chalk.gray(`       • ${criterion}`));
+              });
+            }
+          });
+          console.log();
+        }
+
         console.log(chalk.gray('─'.repeat(70)));
         console.log();
 
         if (settings.autoReview) {
-          console.log(chalk.dim('💡 Tip: After implementing, run: codetandem review ' + file));
+          const firstTodo = modification.todos[0];
+          if (firstTodo) {
+            console.log(
+              chalk.dim(`💡 Tip: After implementing, run: codetandem review ${file} --todo ${firstTodo.id}`)
+            );
+          } else {
+            console.log(chalk.dim('💡 Tip: After implementing, run: codetandem review ' + file));
+          }
         }
       } else {
         // No file specified - show module overview

@@ -49,7 +49,20 @@ export function buildReviewPrompt(
   } else {
     promptParts.push(`TODO: ${codeExtraction.todoText}`);
   }
+  if (codeExtraction.todoId) {
+    promptParts.push(`Task ID: ${codeExtraction.todoId}`);
+  }
   promptParts.push('');
+
+  // Success criteria if available
+  if (codeExtraction.successCriteria && codeExtraction.successCriteria.length > 0) {
+    promptParts.push('## Success Criteria');
+    promptParts.push('The code MUST meet these specific criteria:');
+    codeExtraction.successCriteria.forEach((criterion, i) => {
+      promptParts.push(`${i + 1}. ${criterion}`);
+    });
+    promptParts.push('');
+  }
 
   // Code submission
   promptParts.push("## User's Code Submission");
@@ -64,7 +77,13 @@ export function buildReviewPrompt(
   // Review criteria
   promptParts.push('## Review Criteria');
   promptParts.push('');
-  promptParts.push('Please evaluate the code based on:');
+  if (codeExtraction.successCriteria && codeExtraction.successCriteria.length > 0) {
+    promptParts.push('**PRIMARY**: Verify the code meets ALL Success Criteria listed above.');
+    promptParts.push('');
+    promptParts.push('Additionally, evaluate:');
+  } else {
+    promptParts.push('Please evaluate the code based on:');
+  }
   promptParts.push('1. **Correctness**: Does the code fulfill the TODO/objective?');
   promptParts.push('2. **Code Quality**: Is the code well-structured and readable?');
   promptParts.push('3. **Best Practices**: Does it follow language-specific conventions?');

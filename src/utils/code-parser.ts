@@ -9,6 +9,7 @@ export interface CodeExtraction {
   todoLine: number;
   todoText: string;
   todoId?: string; // Extracted from TODO: [id] format
+  successCriteria?: string[]; // Extracted from SUCCESS CRITERIA comments
   code: string;
   startLine: number;
   endLine: number;
@@ -52,6 +53,38 @@ export async function extractTodoCode(
 
     const [todoLine, todoContent, todoId] = targetTodo;
 
+    // Extract success criteria from comments above TODO
+    const successCriteria: string[] = [];
+    if (todoId) {
+      // Look for SUCCESS CRITERIA comments above the TODO
+      let criteriaStartLine = -1;
+      for (let i = todoLine - 2; i >= 0; i--) {
+        const line = lines[i]?.trim() || '';
+        if (line.startsWith('//') && line.includes('SUCCESS CRITERIA') && line.includes(todoId)) {
+          criteriaStartLine = i;
+          break;
+        }
+        // Stop if we hit non-comment or empty line
+        if (!line.startsWith('//') && line !== '') {
+          break;
+        }
+      }
+
+      // Extract criteria lines
+      if (criteriaStartLine >= 0) {
+        for (let i = criteriaStartLine + 1; i < todoLine; i++) {
+          const line = lines[i]?.trim() || '';
+          if (line.startsWith('//')) {
+            // Remove leading // and whitespace, and optional - prefix
+            const criterion = line.replace(/^\/\/\s*-?\s*/, '').trim();
+            if (criterion && !criterion.includes('TODO:')) {
+              successCriteria.push(criterion);
+            }
+          }
+        }
+      }
+    }
+
     // Find code after TODO
     const nextTodoLine = todos.find(([line]) => line > todoLine)?.[0];
     const endLine = nextTodoLine ? nextTodoLine - 1 : lines.length;
@@ -69,6 +102,7 @@ export async function extractTodoCode(
       todoLine,
       todoText: todoContent,
       todoId,
+      successCriteria: successCriteria.length > 0 ? successCriteria : undefined,
       code: codeLines.join('\n'),
       startLine: todoLine + 1,
       endLine: todoLine + codeLines.length,

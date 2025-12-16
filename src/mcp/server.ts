@@ -19,6 +19,7 @@ import {
 import { learningTools } from './tools/learning.js';
 import { curriculumTools } from './tools/curriculum.js';
 import { proficiencyTools } from './tools/proficiency.js';
+import { projectTools } from './tools/project.js';
 import { listResources, readResource } from './resources/index.js';
 
 // Server configuration
@@ -40,6 +41,7 @@ const allTools: Record<string, any> = {
   ...learningTools,
   ...curriculumTools,
   ...proficiencyTools,
+  ...projectTools,
 };
 
 /**

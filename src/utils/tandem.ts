@@ -103,6 +103,8 @@ export function formatModuleInfo(context: ProjectContext): string {
  * @param fileContent Optional current content of target file
  * @param objectiveIndex Index of the objective to work on (default: 0)
  * @param skillLevel User's skill score for current module (0-10)
+ * @param codingBias Scaffolding level (guided/balanced/independent)
+ * @param featureDescription Optional feature description from user
  * @returns Formatted prompt string for the AI
  */
 export function buildCodingPrompt(
@@ -110,7 +112,9 @@ export function buildCodingPrompt(
   targetFile?: string,
   fileContent?: string,
   objectiveIndex: number = 0,
-  skillLevel: number = 0.0
+  skillLevel: number = 0.0,
+  codingBias: 'guided' | 'balanced' | 'independent' = 'balanced',
+  featureDescription?: string
 ): string {
   const objective =
     objectiveIndex < context.currentModule.objectives.length
@@ -163,67 +167,112 @@ export function buildCodingPrompt(
     }
   }
 
+  // Feature description if provided
+  if (featureDescription) {
+    promptParts.push('# Feature Request');
+    promptParts.push(`The user wants to build: ${featureDescription}`);
+    promptParts.push('');
+  }
+
   // Task instructions with dynamic scaffolding based on skill level
   promptParts.push('# Your Task');
-  promptParts.push('Write foundational code that:');
-  promptParts.push('1. Implements the basic structure needed for the learning objective');
-  promptParts.push('2. Includes a clear TODO comment for the user to complete');
-  promptParts.push('3. Leaves the most educationally valuable part for the user to implement');
+  if (featureDescription) {
+    promptParts.push('Write foundational code that:');
+    promptParts.push('1. Implements this feature in a way that aligns with the current learning objectives');
+    promptParts.push('2. Balances AI-written code with user TODOs based on the skill level and coding bias');
+    promptParts.push('3. Links TODOs to the current module objectives where appropriate');
+    promptParts.push('4. Provides educational value by leaving the most relevant parts for the user to complete');
+  } else {
+    promptParts.push('Write foundational code that:');
+    promptParts.push('1. Implements the basic structure needed for the learning objective');
+    promptParts.push('2. Includes a clear TODO comment for the user to complete');
+    promptParts.push('3. Leaves the most educationally valuable part for the user to implement');
+  }
   promptParts.push('');
 
-  // Dynamic scaffolding based on skill level
+  // Dynamic scaffolding based on skill level and coding bias
   promptParts.push('# Scaffolding Level');
-  if (skillLevel < 3.0) {
-    // Beginner: High scaffolding with detailed help
-    promptParts.push('User skill level: BEGINNER');
+  promptParts.push(`User skill level: ${skillLevel.toFixed(1)}/10.0`);
+  promptParts.push(`User coding bias: ${codingBias}`);
+
+  if (codingBias === 'guided') {
     promptParts.push('Provide DETAILED scaffolding:');
     promptParts.push('- Write comprehensive foundational code');
     promptParts.push('- Include detailed TODO comments with step-by-step hints');
     promptParts.push('- Provide code snippets or examples in the TODO comment');
-    promptParts.push('- Break down complex tasks into smaller, manageable steps');
-    promptParts.push('- Add inline comments explaining key concepts');
-  } else if (skillLevel < 7.0) {
-    // Intermediate: Medium scaffolding with goal-oriented guidance
-    promptParts.push('User skill level: INTERMEDIATE');
-    promptParts.push('Provide GOAL-ORIENTED scaffolding:');
+  } else if (codingBias === 'balanced') {
+    promptParts.push('Provide BALANCED scaffolding:');
     promptParts.push('- Write solid foundational code structure');
     promptParts.push('- Include clear TODO comments describing the goal');
-    promptParts.push('- Provide hints about the approach, but not full implementations');
     promptParts.push('- Let the user figure out implementation details');
-    promptParts.push('- Add comments only for non-obvious design decisions');
   } else {
-    // Advanced: Low scaffolding with conceptual guidance
-    promptParts.push('User skill level: ADVANCED');
+    // independent
     promptParts.push('Provide CONCEPTUAL scaffolding:');
     promptParts.push('- Write minimal foundational code (interfaces, types)');
     promptParts.push('- Include high-level TODO comments describing the concept');
-    promptParts.push('- Focus on architecture and design patterns');
     promptParts.push('- Let the user implement most of the functionality');
-    promptParts.push('- Assume the user understands implementation details');
   }
   promptParts.push('');
 
   promptParts.push('Format your response as JSON with this structure:');
   promptParts.push('{');
   promptParts.push('  "file_path": "relative/path/to/file.ext",');
-  promptParts.push('  "code": "complete file content with TODO",');
-  promptParts.push('  "todo_line": 10,');
-  promptParts.push('  "todo_task": "Brief description of what the user should implement",');
+  promptParts.push('  "code": "complete file content with TODOs and success criteria",');
+  promptParts.push('  "todos": [');
+  promptParts.push('    {');
+  promptParts.push('      "id": "obj-1",');
+  promptParts.push('      "objectiveIndex": 0,');
+  promptParts.push('      "task": "Brief description of what the user should implement",');
+  promptParts.push('      "successCriteria": [');
+  promptParts.push('        "Specific criterion 1 that must be met",');
+  promptParts.push('        "Specific criterion 2 that must be met"');
+  promptParts.push('      ],');
+  promptParts.push('      "line": 10');
+  promptParts.push('    }');
+  promptParts.push('  ],');
   promptParts.push('  "explanation": "Brief explanation of what you implemented"');
   promptParts.push('}');
   promptParts.push('');
-  promptParts.push('The TODO comment should be formatted as:');
-  promptParts.push(`// TODO: [${context.currentModule.id}] <task description>`);
+  promptParts.push('**IMPORTANT TODO Format Rules:**');
+  promptParts.push('');
+  promptParts.push('1. Each TODO must use format: // TODO: [obj-X] <task description>');
+  promptParts.push('   - Where X is the objective number (1-based index)');
+  promptParts.push(`   - Example: // TODO: [obj-1] Implement password validation`);
+  promptParts.push('');
+  promptParts.push('2. Include success criteria as comments ABOVE each TODO:');
+  promptParts.push('   ```');
+  promptParts.push('   // SUCCESS CRITERIA for [obj-1]:');
+  promptParts.push('   // - Must validate password is at least 8 characters');
+  promptParts.push('   // - Must check for at least one uppercase letter');
+  promptParts.push('   // - Must return boolean true/false');
+  promptParts.push('   // TODO: [obj-1] Implement password validation');
+  promptParts.push('   ```');
+  promptParts.push('');
+  promptParts.push('3. Link each TODO to a specific learning objective from the module');
+  promptParts.push('');
+  promptParts.push(
+    '4. Success criteria should be measurable, specific, and tied to the learning objective'
+  );
 
   return promptParts.join('\n');
+}
+
+export interface TodoMetadata {
+  id: string; // e.g., "obj-1"
+  objectiveIndex: number;
+  task: string;
+  successCriteria: string[];
+  line: number;
 }
 
 export interface CodeModification {
   filePath: string;
   code: string;
-  todoLine: number;
-  todoTask: string;
+  todos: TodoMetadata[];
   explanation: string;
+  // Legacy fields for backward compatibility
+  todoLine?: number;
+  todoTask?: string;
 }
 
 /**
@@ -258,22 +307,61 @@ export function parseCodeModification(responseText: string): CodeModification {
     throw new Error(`Invalid JSON in AI response: ${error}`);
   }
 
-  // Validate required fields
-  const requiredFields = ['file_path', 'code', 'todo_line', 'todo_task', 'explanation'];
-  const missing = requiredFields.filter((field) => !(field in data));
+  // Check for new format (with todos array)
+  if ('todos' in data && Array.isArray(data.todos)) {
+    // New format
+    const requiredFields = ['file_path', 'code', 'todos', 'explanation'];
+    const missing = requiredFields.filter((field) => !(field in data));
 
-  if (missing.length > 0) {
-    throw new Error(`Missing required fields in AI response: ${missing.join(', ')}`);
+    if (missing.length > 0) {
+      throw new Error(`Missing required fields in AI response: ${missing.join(', ')}`);
+    }
+
+    const todos = (data.todos as unknown[]).map((todo: any) => ({
+      id: String(todo.id),
+      objectiveIndex: Number(todo.objectiveIndex),
+      task: String(todo.task),
+      successCriteria: Array.isArray(todo.successCriteria)
+        ? (todo.successCriteria as string[])
+        : [],
+      line: Number(todo.line),
+    }));
+
+    return {
+      filePath: String(data.file_path),
+      code: String(data.code),
+      todos,
+      explanation: String(data.explanation),
+      // Legacy fields for backward compatibility
+      todoLine: todos[0]?.line,
+      todoTask: todos[0]?.task,
+    };
+  } else {
+    // Legacy format (backward compatibility)
+    const requiredFields = ['file_path', 'code', 'todo_line', 'todo_task', 'explanation'];
+    const missing = requiredFields.filter((field) => !(field in data));
+
+    if (missing.length > 0) {
+      throw new Error(`Missing required fields in AI response: ${missing.join(', ')}`);
+    }
+
+    return {
+      filePath: String(data.file_path),
+      code: String(data.code),
+      todos: [
+        {
+          id: 'obj-1', // Default ID for legacy format
+          objectiveIndex: 0,
+          task: String(data.todo_task),
+          successCriteria: [],
+          line: Number(data.todo_line),
+        },
+      ],
+      explanation: String(data.explanation),
+      todoLine: Number(data.todo_line),
+      todoTask: String(data.todo_task),
+    };
   }
-
-  // Create modification object
-  return {
-    filePath: String(data.file_path),
-    code: String(data.code),
-    todoLine: Number(data.todo_line),
-    todoTask: String(data.todo_task),
-    explanation: String(data.explanation),
-  };
 }
 
 /**
@@ -285,6 +373,8 @@ export function parseCodeModification(responseText: string): CodeModification {
  * @param fileContent Optional current file content
  * @param objectiveIndex Index of objective to work on
  * @param skillLevel User's skill score for current module (0-10)
+ * @param codingBias Scaffolding level (guided/balanced/independent)
+ * @param featureDescription Optional feature description from user
  * @returns CodeModification object
  * @throws Error if AI response is invalid
  */
@@ -294,10 +384,20 @@ export async function generateCodeWithAI(
   targetFile?: string,
   fileContent?: string,
   objectiveIndex: number = 0,
-  skillLevel: number = 0.0
+  skillLevel: number = 0.0,
+  codingBias: 'guided' | 'balanced' | 'independent' = 'balanced',
+  featureDescription?: string
 ): Promise<CodeModification> {
-  // Build prompt with skill level
-  const prompt = buildCodingPrompt(context, targetFile, fileContent, objectiveIndex, skillLevel);
+  // Build prompt with skill level, coding bias, and feature description
+  const prompt = buildCodingPrompt(
+    context,
+    targetFile,
+    fileContent,
+    objectiveIndex,
+    skillLevel,
+    codingBias,
+    featureDescription
+  );
 
   // Get AI response
   const response = await provider.generateCodeSuggestion(prompt, {
