@@ -17,16 +17,20 @@ import { generateModulesJson } from '../utils/modules.js';
 import { loadState, updateState } from '../utils/state.js';
 import { loadModules } from '../utils/modules.js';
 import { join } from 'path';
+import { getCurriculumPath, getModulesPath, getStatePath } from '../utils/paths.js';
 
 // Generate command - regenerate modules from curriculum
 export const generateCommand = new Command('generate')
   .description('Generate modules.json from curriculum file')
-  .option('-c, --curriculum <path>', 'Path to curriculum file', './curriculum.md')
-  .option('-o, --output <path>', 'Output path for modules.json', './modules.json')
+  .option('-p, --project <path>', 'Path to the project directory', '.')
   .action(async (options) => {
     try {
+      const projectPath = options.project;
+      const curriculumPath = getCurriculumPath(projectPath);
+      const modulesPath = getModulesPath(projectPath);
+
       console.log(chalk.cyan('📚 Generating modules from curriculum...'));
-      const modules = await generateModulesJson(options.curriculum, options.output);
+      const modules = await generateModulesJson(curriculumPath, modulesPath);
       console.log(chalk.green(`✅ Generated ${modules.length} modules`));
       modules.forEach((m, i) => {
         console.log(chalk.gray(`   ${i + 1}. ${m.title} (${m.id})`));
@@ -40,12 +44,17 @@ export const generateCommand = new Command('generate')
 // Status command - show current progress
 export const statusCommand = new Command('status')
   .description('Show current project status and progress')
+  .option('-p, --project <path>', 'Path to the project directory', '.')
   .option('--detailed', 'Show detailed information')
   .option('--json', 'Output as JSON')
   .action(async (options) => {
     try {
-      const state = await loadState('./codetandem.state.json');
-      const modules = await loadModules('./modules.json');
+      const projectPath = options.project;
+      const statePath = getStatePath(projectPath);
+      const modulesPath = getModulesPath(projectPath);
+
+      const state = await loadState(statePath);
+      const modules = await loadModules(modulesPath);
 
       if (options.json) {
         console.log(
@@ -99,12 +108,17 @@ export const statusCommand = new Command('status')
 // List command - list all modules
 export const listCommand = new Command('list')
   .description('List all curriculum modules')
+  .option('-p, --project <path>', 'Path to the project directory', '.')
   .option('--completed', 'Show only completed modules')
   .option('--remaining', 'Show only remaining modules')
   .action(async (options) => {
     try {
-      const modules = await loadModules('./modules.json');
-      const state = await loadState('./codetandem.state.json');
+      const projectPath = options.project;
+      const modulesPath = getModulesPath(projectPath);
+      const statePath = getStatePath(projectPath);
+
+      const modules = await loadModules(modulesPath);
+      const state = await loadState(statePath);
 
       console.log(chalk.cyan('\n📚 Curriculum Modules\n'));
 
@@ -136,11 +150,16 @@ export const listCommand = new Command('list')
 // Kept for backward compatibility and manual override
 export const completeCommand = new Command('complete')
   .description('Mark current module as complete and update progress')
+  .option('-p, --project <path>', 'Path to the project directory', '.')
   .option('--force', 'Force completion without AI approval (not recommended)')
   .action(async (options) => {
     try {
-      const state = await loadState('./codetandem.state.json');
-      const modules = await loadModules('./modules.json');
+      const projectPath = options.project;
+      const statePath = getStatePath(projectPath);
+      const modulesPath = getModulesPath(projectPath);
+
+      const state = await loadState(statePath);
+      const modules = await loadModules(modulesPath);
 
       const currentModuleId = state.currentModuleId;
       const currentModule = modules.find((m) => m.id === currentModuleId);
@@ -186,7 +205,7 @@ export const completeCommand = new Command('complete')
       }
 
       // Mark as complete
-      await updateState('./codetandem.state.json', {
+      await updateState(statePath, {
         completedModuleId: currentModuleId,
         assessmentPending: true, // Reset for next module
       });
@@ -212,11 +231,16 @@ export const completeCommand = new Command('complete')
 // Kept for backward compatibility and manual navigation
 export const nextCommand = new Command('next')
   .description('Move to the next module in the curriculum')
+  .option('-p, --project <path>', 'Path to the project directory', '.')
   .option('--force', 'Skip validation and force move to next module (not recommended)')
   .action(async (options) => {
     try {
-      const state = await loadState('./codetandem.state.json');
-      const modules = await loadModules('./modules.json');
+      const projectPath = options.project;
+      const statePath = getStatePath(projectPath);
+      const modulesPath = getModulesPath(projectPath);
+
+      const state = await loadState(statePath);
+      const modules = await loadModules(modulesPath);
 
       const currentModuleId = state.currentModuleId;
       const currentIndex = modules.findIndex((m) => m.id === currentModuleId);
@@ -264,7 +288,7 @@ export const nextCommand = new Command('next')
       const nextModule = modules[currentIndex + 1];
 
       // Update state to next module
-      await updateState('./codetandem.state.json', {
+      await updateState(statePath, {
         currentModuleId: nextModule!.id,
         assessmentPending: true, // Reset approval for new module
       });
@@ -294,11 +318,16 @@ export const testCommand = new Command('test')
 export const hintCommand = new Command('hint')
   .description('Get a hint for the current task or objective')
   .argument('[file]', 'File to get hint for (optional)')
+  .option('-p, --project <path>', 'Path to the project directory', '.')
   .option('--objective <index>', 'Get hint for specific objective')
   .action(async (file: string | undefined, options) => {
     try {
-      const state = await loadState('./codetandem.state.json');
-      const modules = await loadModules('./modules.json');
+      const projectPath = options.project;
+      const statePath = getStatePath(projectPath);
+      const modulesPath = getModulesPath(projectPath);
+
+      const state = await loadState(statePath);
+      const modules = await loadModules(modulesPath);
       const currentModule = modules.find((m) => m.id === state.currentModuleId);
 
       if (!currentModule) {
@@ -307,7 +336,7 @@ export const hintCommand = new Command('hint')
       }
 
       // Track hint usage
-      await updateState('./codetandem.state.json', {
+      await updateState(statePath, {
         incrementHints: true,
       });
 
@@ -370,12 +399,17 @@ function getHintForObjective(objective: string, moduleTitle: string, hintLevel: 
 export const solveCommand = new Command('solve')
   .description('Get AI-generated solution (significant score penalty)')
   .argument('[file]', 'File to generate solution for')
+  .option('-p, --project <path>', 'Path to the project directory', '.')
   .option('--objective <index>', 'Generate solution for specific objective')
   .option('--confirm', 'Confirm you want to use AI solution')
   .action(async (file: string | undefined, options) => {
     try {
-      const state = await loadState('./codetandem.state.json');
-      const modules = await loadModules('./modules.json');
+      const projectPath = options.project;
+      const statePath = getStatePath(projectPath);
+      const modulesPath = getModulesPath(projectPath);
+
+      const state = await loadState(statePath);
+      const modules = await loadModules(modulesPath);
       const currentModule = modules.find((m) => m.id === state.currentModuleId);
 
       if (!currentModule) {
@@ -403,7 +437,7 @@ export const solveCommand = new Command('solve')
       }
 
       // Track solution usage
-      await updateState('./codetandem.state.json', {
+      await updateState(statePath, {
         incrementSolutions: true,
       });
 

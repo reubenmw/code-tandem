@@ -183,6 +183,38 @@ export async function updateState(
     state.assessmentPending = options.assessmentPending;
   }
 
+  // Add new TODOs to registry
+  if (options.addTodos && options.addTodos.length > 0) {
+    if (!state.todos) {
+      state.todos = {};
+    }
+    for (const todo of options.addTodos) {
+      state.todos[todo.id] = todo;
+    }
+  }
+
+  // Update existing TODO
+  if (options.updateTodo) {
+    if (!state.todos) {
+      state.todos = {};
+    }
+    const existing = state.todos[options.updateTodo.id];
+    if (existing) {
+      state.todos[options.updateTodo.id] = {
+        ...existing,
+        ...options.updateTodo.updates,
+      };
+    }
+  }
+
+  // Record user mistake
+  if (options.addMistake) {
+    if (!state.userMistakes) {
+      state.userMistakes = [];
+    }
+    state.userMistakes.push(options.addMistake);
+  }
+
   // Update timestamp
   state.updatedAt = new Date().toISOString();
 
@@ -279,4 +311,66 @@ export function calculateProficiencyPenalty(hintsUsed: number, solutionsUsed: nu
   const hintPenalty = hintsUsed * 0.5;
   const solutionPenalty = solutionsUsed * 1.5;
   return Math.min(hintPenalty + solutionPenalty, 3.0); // Max 3 point penalty
+}
+
+/**
+ * Get a TODO record by ID
+ */
+export function getTodoById(state: StateData, todoId: string): import('../types/state.js').TodoRecord | undefined {
+  return state.todos?.[todoId];
+}
+
+/**
+ * Get all TODOs for a specific module
+ */
+export function getTodosByModule(state: StateData, moduleId: string): import('../types/state.js').TodoRecord[] {
+  if (!state.todos) return [];
+  return Object.values(state.todos).filter((todo) => todo.moduleId === moduleId);
+}
+
+/**
+ * Get all pending TODOs
+ */
+export function getPendingTodos(state: StateData): import('../types/state.js').TodoRecord[] {
+  if (!state.todos) return [];
+  return Object.values(state.todos).filter((todo) => todo.status === 'pending');
+}
+
+/**
+ * Get all user mistakes
+ */
+export function getUserMistakes(state: StateData): import('../types/state.js').UserMistake[] {
+  return state.userMistakes || [];
+}
+
+/**
+ * Get user mistakes for a specific module
+ */
+export function getMistakesByModule(state: StateData, moduleId: string): import('../types/state.js').UserMistake[] {
+  if (!state.userMistakes) return [];
+  return state.userMistakes.filter((mistake) => mistake.moduleId === moduleId);
+}
+
+/**
+ * Get user mistakes for a specific objective
+ */
+export function getMistakesByObjective(state: StateData, moduleId: string, objectiveIndex: number): import('../types/state.js').UserMistake[] {
+  if (!state.userMistakes) return [];
+  return state.userMistakes.filter(
+    (mistake) => mistake.moduleId === moduleId && mistake.objectiveIndex === objectiveIndex
+  );
+}
+
+/**
+ * Get weakness areas with frequency count
+ */
+export function getWeaknessAreas(state: StateData, moduleId?: string): Record<string, number> {
+  const mistakes = moduleId ? getMistakesByModule(state, moduleId) : getUserMistakes(state);
+  const weaknesses: Record<string, number> = {};
+
+  for (const mistake of mistakes) {
+    weaknesses[mistake.weaknessArea] = (weaknesses[mistake.weaknessArea] || 0) + 1;
+  }
+
+  return weaknesses;
 }

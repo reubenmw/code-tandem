@@ -5,11 +5,15 @@
  */
 
 import { readFile } from 'fs/promises';
+import { randomBytes } from 'crypto';
 import {
   loadState,
   updateState,
   getModuleProgress,
   areAllObjectivesCompleted,
+  getTodoById,
+  getWeaknessAreas,
+  getMistakesByModule,
 } from '../../utils/state.js';
 import { loadModules } from '../../utils/modules.js';
 import { extractTodoCode } from '../../utils/code-parser.js';
@@ -17,7 +21,7 @@ import { reviewCodeWithAI } from '../../utils/review.js';
 import { getAIProvider } from '../../providers/factory.js';
 import { ConfigManager } from '../../utils/config.js';
 import { getApiKey } from '../../utils/secrets.js';
-import type { ModuleProgress } from '../../types/state.js';
+import type { ModuleProgress, UserMistake } from '../../types/state.js';
 import { getStatePath, getModulesPath } from '../../utils/paths.js';
 
 interface ToolDefinition {
@@ -40,7 +44,7 @@ interface ToolDefinition {
 const getCurrentModuleTool: ToolDefinition = {
   name: 'codetandem_get_current_module',
   description:
-    'Get the current learning module with objectives, progress, and proficiency scores. Use this to understand where the user is in their learning journey.',
+    'Get the current learning module with objectives, progress, and proficiency scores. Shows which objectives are completed, hints/solutions used, and whether user can progress. Use this to understand where the user is in their learning journey and what they need to work on next.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -127,7 +131,7 @@ const getCurrentModuleTool: ToolDefinition = {
 const reviewCodeTool: ToolDefinition = {
   name: 'codetandem_review_code',
   description:
-    'Submit code for AI review and proficiency scoring. Returns feedback, score (with penalties), and whether objectives are complete. This is the PRIMARY way AI should evaluate user code.',
+    'Submit code for AI review and proficiency scoring. Returns feedback, score (with penalties), and whether objectives are complete. This is the PRIMARY way AI should evaluate user code. AUTOMATIC: When review fails or score < 7.0, this tool records user mistakes with weakness areas (syntax, logic, incomplete, etc.) in state. Use codetandem_get_weaknesses to query these later for adaptive learning.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -184,6 +188,15 @@ const reviewCodeTool: ToolDefinition = {
         );
       }
 
+      // Enrich with success criteria from state if available
+      if (todoId && codeExtraction.todoId) {
+        const todoRecord = getTodoById(state, codeExtraction.todoId);
+        if (todoRecord && todoRecord.successCriteria.length > 0) {
+          // Use success criteria from state (more reliable than parsing comments)
+          codeExtraction.successCriteria = todoRecord.successCriteria;
+        }
+      }
+
       // Get AI provider
       const config = new ConfigManager();
       const provider = await config.getProvider();
@@ -218,16 +231,74 @@ const reviewCodeTool: ToolDefinition = {
 
       // Record objective completion if TODO ID present
       if (codeExtraction.todoId && review.success && adjustedScore >= 7.0) {
+        const completedAt = new Date().toISOString();
+
         await updateState(statePath, {
           objectiveCompletion: {
             objectiveId: codeExtraction.todoId,
             objectiveText: codeExtraction.todoText,
             todoId: codeExtraction.todoId,
-            completedAt: new Date().toISOString(),
+            completedAt,
             score: adjustedScore,
             hintsUsed: progress.hintsUsed,
             solutionsUsed: progress.solutionsUsed,
           },
+          // Also mark the TODO as completed in the registry
+          updateTodo: {
+            id: codeExtraction.todoId,
+            updates: {
+              status: 'completed' as const,
+              completedAt,
+            },
+          },
+        });
+      } else if (codeExtraction.todoId && !review.success) {
+        // Mark TODO as failed if review didn't pass
+        await updateState(statePath, {
+          updateTodo: {
+            id: codeExtraction.todoId,
+            updates: {
+              status: 'failed' as const,
+            },
+          },
+        });
+      }
+
+      // Record user mistake if review failed or score too low
+      if ((!review.success || adjustedScore < 7.0) && codeExtraction.todoId) {
+        const todoRecord = getTodoById(state, codeExtraction.todoId);
+        const mistakeId = `mistake-${Date.now()}-${randomBytes(4).toString('hex')}`;
+
+        // Determine weakness area from review feedback
+        let weaknessArea = 'general';
+        const feedbackLower = review.feedback.toLowerCase();
+        if (feedbackLower.includes('syntax') || feedbackLower.includes('typo')) {
+          weaknessArea = 'syntax';
+        } else if (feedbackLower.includes('logic') || feedbackLower.includes('algorithm')) {
+          weaknessArea = 'logic';
+        } else if (feedbackLower.includes('incomplete') || feedbackLower.includes('missing')) {
+          weaknessArea = 'incomplete implementation';
+        } else if (feedbackLower.includes('incorrect') || feedbackLower.includes('wrong')) {
+          weaknessArea = 'incorrect implementation';
+        } else if (feedbackLower.includes('structure') || feedbackLower.includes('organization')) {
+          weaknessArea = 'code structure';
+        }
+
+        const mistake: UserMistake = {
+          id: mistakeId,
+          moduleId: state.currentModuleId,
+          objectiveIndex: todoRecord?.objectiveIndex ?? 0,
+          todoId: codeExtraction.todoId,
+          timestamp: new Date().toISOString(),
+          weaknessArea,
+          description: `Failed ${codeExtraction.todoText}`,
+          reviewFeedback: review.feedback,
+          reviewScore: adjustedScore,
+          suggestions: review.suggestions || [],
+        };
+
+        await updateState(statePath, {
+          addMistake: mistake,
         });
       }
 
@@ -539,6 +610,89 @@ const getSolutionTool: ToolDefinition = {
 };
 
 /**
+ * Get user weaknesses for adaptive learning
+ */
+const getWeaknessesTool: ToolDefinition = {
+  name: 'codetandem_get_weaknesses',
+  description:
+    'Get user weakness areas based on past mistakes. Use this to understand what the user struggles with when creating new tasks, so you can provide appropriate scaffolding or focus on areas that need improvement.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      moduleId: {
+        type: 'string',
+        description: 'Optional module ID to filter weaknesses (default: current module)',
+      },
+      projectPath: {
+        type: 'string',
+        description: 'Path to CodeTandem project (default: current directory)',
+      },
+    },
+  },
+  handler: async (args) => {
+    try {
+      const projectPath = (args.projectPath as string) || '.';
+      const statePath = getStatePath(projectPath);
+      const state = await loadState(statePath);
+
+      const moduleId = (args.moduleId as string) || state.currentModuleId;
+
+      // Get all mistakes for the module
+      const mistakes = getMistakesByModule(state, moduleId);
+
+      // Get weakness areas with frequency
+      const weaknessAreas = getWeaknessAreas(state, moduleId);
+
+      // Get recent mistakes (last 5)
+      const recentMistakes = mistakes
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 5)
+        .map((m) => ({
+          weaknessArea: m.weaknessArea,
+          description: m.description,
+          timestamp: m.timestamp,
+          reviewScore: m.reviewScore,
+        }));
+
+      const result = {
+        moduleId,
+        totalMistakes: mistakes.length,
+        weaknessAreas,
+        recentMistakes,
+        recommendations:
+          Object.keys(weaknessAreas).length > 0
+            ? [
+                'Consider providing extra scaffolding in weak areas',
+                'Break down complex tasks in areas where user struggles',
+                'Include helpful hints for recurring weakness patterns',
+              ]
+            : ['No significant weaknesses detected - user is doing well!'],
+      };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ error: message }, null, 2),
+          },
+        ],
+        isError: true,
+      };
+    }
+  },
+};
+
+/**
  * Export all learning tools
  */
 export const learningTools: Record<string, ToolDefinition> = {
@@ -546,4 +700,5 @@ export const learningTools: Record<string, ToolDefinition> = {
   codetandem_review_code: reviewCodeTool,
   codetandem_get_hint: getHintTool,
   codetandem_get_solution: getSolutionTool,
+  codetandem_get_weaknesses: getWeaknessesTool,
 };

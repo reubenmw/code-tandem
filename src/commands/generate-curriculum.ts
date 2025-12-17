@@ -10,14 +10,18 @@ import { ConfigManager } from '../utils/config.js';
 import { getApiKey } from '../utils/secrets.js';
 import { generateModulesJson } from '../utils/modules.js';
 import { generateInitialState } from '../utils/state.js';
+import { getLrdPath, getCurriculumPath, getModulesPath, getStatePath } from '../utils/paths.js';
 
 export const generateCurriculumCommand = new Command('generate-curriculum')
   .description('Generate curriculum from Learning Requirements Document')
-  .option('-l, --lrd <path>', 'Path to LRD file', './lrd.md')
-  .option('-o, --output <path>', 'Output path for curriculum.md', './curriculum.md')
+  .option('-p, --project <path>', 'Path to the project directory', '.')
   .option('--force', 'Overwrite existing curriculum')
   .action(async (options) => {
-    const lrdFile = options.lrd;
+    const projectPath = options.project;
+    const lrdFile = getLrdPath(projectPath);
+    const outputPath = getCurriculumPath(projectPath);
+    const modulesPath = getModulesPath(projectPath);
+    const statePath = getStatePath(projectPath);
     try {
       console.log(chalk.cyan('📖 Reading Learning Requirements Document...'));
 
@@ -75,26 +79,26 @@ Output ONLY the markdown curriculum, no explanations or additional text.`;
       console.log(chalk.green('   ✓ Generated curriculum'));
 
       // Write curriculum file
-      console.log(chalk.cyan(`📝 Writing to ${options.output}...`));
-      await writeFile(options.output, curriculumContent, 'utf-8');
-      console.log(chalk.green('   ✓ Created curriculum.md'));
+      console.log(chalk.cyan(`📝 Writing to .codetandem/curriculum.md...`));
+      await writeFile(outputPath, curriculumContent, 'utf-8');
+      console.log(chalk.green('   ✓ Created .codetandem/curriculum.md'));
 
       // Generate modules.json
       console.log(chalk.cyan('📚 Generating modules.json...'));
-      const modules = await generateModulesJson(options.output, './modules.json');
-      console.log(chalk.green(`   ✓ Generated modules.json (${modules.length} modules)`));
+      const modules = await generateModulesJson(outputPath, modulesPath);
+      console.log(chalk.green(`   ✓ Generated .codetandem/modules.json (${modules.length} modules)`));
 
       // Generate initial state
-      console.log(chalk.cyan('📊 Generating codetandem.state.json...'));
+      console.log(chalk.cyan('📊 Generating state file...'));
       await generateInitialState({
-        modulesPath: './modules.json',
-        projectPath: '.',
-        outputPath: './codetandem.state.json',
+        modulesPath,
+        projectPath,
+        outputPath: statePath,
         initialSkillScore: 0.0,
         firstModuleId: modules[0]?.id || 'module-1',
         totalModules: modules.length,
       });
-      console.log(chalk.green('   ✓ Generated state file'));
+      console.log(chalk.green('   ✓ Generated .codetandem/codetandem.state.json'));
 
       console.log();
       console.log(chalk.green('✅ Curriculum generated successfully!'));
@@ -120,7 +124,7 @@ Output ONLY the markdown curriculum, no explanations or additional text.`;
       console.log(chalk.gray('─'.repeat(50)));
       console.log();
       console.log('Next steps:');
-      console.log(chalk.cyan('  1. Review curriculum.md and edit if needed'));
+      console.log(chalk.cyan('  1. Review .codetandem/curriculum.md and edit if needed'));
       console.log(chalk.cyan('  2. Run: codetandem generate (to regenerate modules)'));
       console.log(chalk.cyan('  3. Run: codetandem status (to check your setup)'));
       console.log(chalk.cyan('  4. Run: codetandem start (to begin learning)'));

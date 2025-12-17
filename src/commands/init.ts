@@ -6,6 +6,7 @@ import { Command } from 'commander';
 import { writeFile, access, mkdir } from 'fs/promises';
 import { join } from 'path';
 import chalk from 'chalk';
+import { getLrdPath, getCodetandemDir, getSettingsPath } from '../utils/paths.js';
 
 const DEFAULT_LRD = `# Learning Goal
 
@@ -45,9 +46,9 @@ export const initCommand = new Command('init')
   .action(async (options) => {
     try {
       const projectPath = options.project;
-      const lrdPath = join(projectPath, 'lrd.md');
-      const codetandemDir = join(projectPath, '.codetandem');
-      const settingsPath = join(codetandemDir, 'settings.json');
+      const lrdPath = getLrdPath(projectPath);
+      const codetandemDir = getCodetandemDir(projectPath);
+      const settingsPath = getSettingsPath(projectPath);
 
       console.log(chalk.cyan('🚀 Initializing CodeTandem project...'));
       console.log();
@@ -66,11 +67,11 @@ export const initCommand = new Command('init')
       }
 
       if (!lrdExists || options.force) {
-        console.log(chalk.yellow('📝 Creating Learning Requirements Document (lrd.md)...'));
+        console.log(chalk.yellow('📝 Creating Learning Requirements Document...'));
         await writeFile(lrdPath, DEFAULT_LRD, 'utf-8');
-        console.log(chalk.green('   ✓ Created lrd.md'));
+        console.log(chalk.green('   ✓ Created .codetandem/lrd.md'));
       } else {
-        console.log(chalk.green('   ✓ Found existing lrd.md'));
+        console.log(chalk.green('   ✓ Found existing .codetandem/lrd.md'));
       }
 
       // Create default settings
@@ -93,9 +94,9 @@ export const initCommand = new Command('init')
       if (!settingsExists || options.force) {
         console.log(chalk.yellow('⚙️  Creating default settings...'));
         await writeFile(settingsPath, JSON.stringify(defaultSettings, null, 2), 'utf-8');
-        console.log(chalk.green('   ✓ Created settings.json'));
+        console.log(chalk.green('   ✓ Created .codetandem/settings.json'));
       } else {
-        console.log(chalk.green('   ✓ Found existing settings.json'));
+        console.log(chalk.green('   ✓ Found existing .codetandem/settings.json'));
       }
 
       console.log();
@@ -104,7 +105,7 @@ export const initCommand = new Command('init')
       console.log(chalk.bold('🎯 Your Learning Journey Starts Here:'));
       console.log();
       console.log(chalk.cyan('Step 1: Define your learning goal'));
-      console.log(chalk.gray('   Edit lrd.md with your background and what you want to learn'));
+      console.log(chalk.gray('   Edit .codetandem/lrd.md with your background and what you want to learn'));
       console.log();
       console.log(chalk.cyan('Step 2: Configure AI provider'));
       console.log(chalk.gray('   codetandem config set-provider openai'));

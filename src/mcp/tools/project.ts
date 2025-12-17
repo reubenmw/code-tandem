@@ -5,9 +5,10 @@
 import { mkdir, writeFile, readFile } from 'fs/promises';
 import { join, resolve } from 'path';
 import chalk from 'chalk';
-import { loadState, getCurrentModuleId, getModuleProgress } from '../../utils/state.js';
+import { loadState, getCurrentModuleId, getModuleProgress, updateState } from '../../utils/state.js';
 import { loadModules, getModuleById } from '../../utils/modules.js';
 import { getStatePath, getModulesPath } from '../../utils/paths.js';
+import type { TodoRecord } from '../../types/state.js';
 import {
   loadProjectContext,
   buildCodingPrompt,
@@ -119,7 +120,7 @@ const createProjectFilesTool: ToolDefinition = {
 const createFeatureTool: ToolDefinition = {
   name: 'codetandem_create_feature',
   description:
-    'Build the EXACT feature the user wants for THEIR product. CRITICAL: User is a "vibe coder" driving the product vision - they know what they want to build. Your job is to help build THEIR product, weaving learning naturally into THEIR requested features. User\'s vision comes FIRST, curriculum alignment is secondary. Build what they ask for.',
+    'Build the EXACT feature the user wants for THEIR product. CRITICAL: User is a "vibe coder" driving the product vision - they know what they want to build. Your job is to help build THEIR product, weaving learning naturally into THEIR requested features. User\'s vision comes FIRST, curriculum alignment is secondary. Build what they ask for. AUTOMATIC: This tool stores all generated TODOs with their success criteria in state for tracking and review.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -202,6 +203,25 @@ const createFeatureTool: ToolDefinition = {
 
       // Apply the code modification
       const createdFilePath = await applyCodeModification(modification, projectPath, false);
+
+      // Store TODOs in state registry
+      const todoRecords: TodoRecord[] = modification.todos.map((todo) => ({
+        id: todo.id,
+        moduleId: context.currentModule.id,
+        objectiveIndex: todo.objectiveIndex,
+        task: todo.task,
+        successCriteria: todo.successCriteria,
+        filePath: modification.filePath,
+        line: todo.line,
+        createdAt: new Date().toISOString(),
+        status: 'pending' as const,
+      }));
+
+      if (todoRecords.length > 0) {
+        await updateState(statePath, {
+          addTodos: todoRecords,
+        });
+      }
 
       // Validate file path doesn't use curriculum-based naming
       const pathLower = modification.filePath.toLowerCase();
